@@ -1,0 +1,2 @@
+# AllenServer
+AllenServer是在学习greatestWork后的一个Golang实现的游戏服务器
