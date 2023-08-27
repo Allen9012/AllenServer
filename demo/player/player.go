@@ -36,7 +36,7 @@ func NewPlayer() *Player {
 func (p *Player) Run() {
 	for {
 		select {
-		case handlerParam := <-p.HandleParamCh:
+		case handlerParam := <-p.HandlerParamCh:
 			if fn, ok := p.handlers[handlerParam.ID]; ok {
 				fn(handlerParam.Data)
 			}
