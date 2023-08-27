@@ -24,6 +24,11 @@ func (pm *PlayerMgr) Add(p player.Player) {
 	go p.Run()
 }
 
+// Del ...
+func (pm *PlayerMgr) Del(p player.Player) {
+	delete(pm.players, p.UID)
+}
+
 func (pm *PlayerMgr) Run() {
 	for {
 		select {

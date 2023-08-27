@@ -4,16 +4,22 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
+	"sync"
 	"time"
 )
 
-/**
-  Copyright © 2023 github.com/Allen9012 All rights reserved.
-  @author: Allen
-  @since: 2023/8/27
-  @desc: 定义pack的形式收发数据
-  @modified by:
-**/
+/*
+	Copyright © 2023 github.com/Allen9012 All rights reserved.
+	@author: Allen
+	@since: 2023/8/27
+	@desc: 定义pack的形式收发数据
+	@modified by:
+*/
+
+var (
+	once                 sync.Once
+	NormalPackerInstance *NormalPacker
+)
 
 type NormalPacker struct {
 	Order binary.ByteOrder // 大端或者小端存储顺序
@@ -21,8 +27,13 @@ type NormalPacker struct {
 
 const LEN_UINT64 = 8
 
-func NewNormalPacker(order binary.ByteOrder) *NormalPacker {
-	return &NormalPacker{Order: order}
+// NewNormalPacker 增加了修改我们使得Packer需要成为单例
+func init() {
+	once.Do(func() {
+		NormalPackerInstance = &NormalPacker{
+			Order: binary.BigEndian,
+		}
+	})
 }
 
 // Pack    |data 长度 | id | data|

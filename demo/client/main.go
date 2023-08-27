@@ -1,4 +1,4 @@
-package manager
+package main
 
 /**
   Copyright © 2023 github.com/Allen9012 All rights reserved.
@@ -8,5 +8,8 @@ package manager
   @modified by:
 **/
 
-type MgrIf interface {
+func main() {
+	c := NewClient()
+	c.Run()
+	select {}
 }

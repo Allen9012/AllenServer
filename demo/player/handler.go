@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Allen9012/AllenServer/demo/chat"
-	"github.com/Allen9012/AllenServer/utils/function"
+	"github.com/Allen9012/AllenServer/demo/function"
 )
 
 /**
@@ -17,7 +17,7 @@ import (
 
 var ERR_TYPE_CONVERT = errors.New("type convert error")
 
-type Handler func(data interface{})
+type Handler func(interface{})
 
 //func (p *Player) AddFriend(data interface{}) (bool, error) {
 //	FriendID, ok := data.(uint64)

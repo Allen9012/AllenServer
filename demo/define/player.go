@@ -9,6 +9,6 @@ package define
 **/
 
 type HandlerParam struct {
-	HandlerKey
+	ID   uint64
 	Data interface{}
 }

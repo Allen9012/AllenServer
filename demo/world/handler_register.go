@@ -1,4 +1,4 @@
-package manager
+package world
 
 /**
   Copyright © 2023 github.com/Allen9012 All rights reserved.
@@ -8,5 +8,6 @@ package manager
   @modified by:
 **/
 
-type MgrIf interface {
+func (mm *MgrMgr) HandlerRegister() {
+	mm.Handlers[1] = mm.UserLogin
 }

@@ -1,6 +1,9 @@
 package player
 
-import "github.com/Allen9012/AllenServer/demo/define"
+import (
+	"github.com/Allen9012/AllenServer/demo/define"
+	"github.com/Allen9012/AllenServer/demo/network"
+)
 
 /**
   Copyright © 2023 github.com/Allen9012 All rights reserved.
@@ -12,17 +15,21 @@ import "github.com/Allen9012/AllenServer/demo/define"
 
 // Player 玩家
 type Player struct {
-	UID           uint64
-	FriendList    []uint64 //朋友
-	HandleParamCh chan *define.HandlerParam
-	handlers      map[string]Handler
+	UID            uint64
+	FriendList     []uint64 //朋友
+	HandlerParamCh chan *define.HandlerParam
+	handlers       map[uint64]Handler
+	session        *network.Session
 }
 
-func NewPlayer(uid uint64) *Player {
+// NewPlayer   TODO 分布式ID生成
+func NewPlayer() *Player {
 	p := &Player{
 		UID:        0,
-		FriendList: nil,
+		FriendList: make([]uint64, 100),
+		handlers:   make(map[uint64]Handler),
 	}
+	p.HandlerRegister()
 	return p
 }
 
@@ -30,7 +37,7 @@ func (p *Player) Run() {
 	for {
 		select {
 		case handlerParam := <-p.HandleParamCh:
-			if fn, ok := p.handlers[handlerParam.HandlerKey]; ok {
+			if fn, ok := p.handlers[handlerParam.ID]; ok {
 				fn(handlerParam.Data)
 			}
 		}

@@ -8,8 +8,8 @@ package player
   @modified by:
 **/
 
-func (p *Player) HandleRegister() {
-	p.handlers["add_friend"] = p.AddFriend
-	p.handlers["del_friend"] = p.DelFriend
-	p.handlers["handle_chat_msg"] = p.HandleChatMsg
+func (p *Player) HandlerRegister() {
+	p.handlers[111] = p.AddFriend
+	p.handlers[222] = p.DelFriend
+	p.handlers[333] = p.HandleChatMsg
 }

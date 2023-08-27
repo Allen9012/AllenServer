@@ -1,7 +1,6 @@
 package network
 
 import (
-	"encoding/binary"
 	"fmt"
 	"net"
 	"time"
@@ -17,17 +16,22 @@ import (
 
 // Session 连接
 type Session struct {
-	conn    net.Conn
-	packer  *NormalPacker
-	chWrite chan *Message
+	UID            int64
+	Conn           net.Conn
+	IsClose        bool
+	packer         IPacker
+	writeCh        chan *Message
+	IsPlayerOnline bool
+	MessageHandler func(packet *SessionPacket)
+	//
 }
 
 // NewSession 网络通信默认是大端
 func NewSession(conn net.Conn) *Session {
 	return &Session{
-		conn:    conn,
-		packer:  NewNormalPacker(binary.BigEndian),
-		chWrite: make(chan *Message, 1),
+		Conn:    conn,
+		packer:  NormalPackerInstance,
+		writeCh: make(chan *Message, 1),
 	}
 }
 
@@ -37,49 +41,51 @@ func (s *Session) Run() {
 	go s.Write()
 }
 
-func (s *Session) Close() {
-
-}
-
 func (s *Session) Read() {
-	err := s.conn.SetReadDeadline(time.Now().Add(time.Second))
-	if err != nil {
-		fmt.Println(err)
-	}
 	// 一直读取数据
 	for {
-		message, err := s.packer.Unpack(s.conn)
+		err := s.Conn.SetReadDeadline(time.Now().Add(time.Second))
 		if err != nil {
 			fmt.Println(err)
+			continue
+		}
+		message, err := s.packer.Unpack(s.Conn)
+		if _, ok := err.(net.Error); ok {
+			continue
 		}
 		fmt.Println("server receive message:", string(message.Data))
-		s.chWrite <- &Message{
+		s.MessageHandler(&SessionPacket{
+			Msg:  message,
+			Sess: s,
+		})
+		s.writeCh <- &Message{
 			ID:   999,
-			Data: []byte("receive message"),
+			Data: []byte("server receive message"),
 		}
 	}
 }
 
 func (s *Session) Write() {
-	err := s.conn.SetWriteDeadline(time.Now().Add(time.Second))
-	if err != nil {
-		fmt.Println(err)
-	}
 	for {
 		select {
-		case msg := <-s.chWrite:
+		case msg := <-s.writeCh:
 			s.send(msg)
 		}
 	}
 }
 
+// 超时时间需要加在send中，而不是Write中
 func (s *Session) send(message *Message) {
+	err := s.Conn.SetWriteDeadline(time.Now().Add(time.Second))
+	if err != nil {
+		fmt.Println(err)
+	}
 	bytes, err := s.packer.Pack(message)
 	if err != nil {
 		return
 	}
 
-	_, err = s.conn.Write(bytes)
+	_, err = s.Conn.Write(bytes)
 	if err != nil {
 		fmt.Println(err)
 	}
