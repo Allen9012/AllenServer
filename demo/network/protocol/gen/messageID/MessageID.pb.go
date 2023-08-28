@@ -4,7 +4,7 @@
 // 	protoc        v3.21.12
 // source: proto/MessageID.proto
 
-package messageId
+package messageID
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"

@@ -1,8 +1,8 @@
 package player
 
 import (
-	"github.com/Allen9012/AllenServer/demo/define"
 	"github.com/Allen9012/AllenServer/demo/network"
+	"github.com/Allen9012/AllenServer/demo/network/protocol/gen/messageID"
 )
 
 /**
@@ -17,8 +17,8 @@ import (
 type Player struct {
 	UID            uint64
 	FriendList     []uint64 //朋友
-	HandlerParamCh chan *define.HandlerParam
-	handlers       map[uint64]Handler
+	HandlerParamCh chan *network.SessionPacket
+	handlers       map[messageID.MessageId]Handler
 	session        *network.Session
 }
 
@@ -27,7 +27,7 @@ func NewPlayer() *Player {
 	p := &Player{
 		UID:        0,
 		FriendList: make([]uint64, 100),
-		handlers:   make(map[uint64]Handler),
+		handlers:   make(map[messageID.MessageId]Handler),
 	}
 	p.HandlerRegister()
 	return p
@@ -37,8 +37,8 @@ func (p *Player) Run() {
 	for {
 		select {
 		case handlerParam := <-p.HandlerParamCh:
-			if fn, ok := p.handlers[handlerParam.ID]; ok {
-				fn(handlerParam.Data)
+			if fn, ok := p.handlers[messageID.MessageId(handlerParam.Msg.ID)]; ok {
+				fn(handlerParam)
 			}
 		}
 	}

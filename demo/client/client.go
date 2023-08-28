@@ -1,9 +1,9 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/Allen9012/AllenServer/demo/network"
+	"github.com/Allen9012/AllenServer/demo/network/protocol/gen/messageID"
 )
 
 /**
@@ -17,7 +17,7 @@ import (
 type Client struct {
 	cli             *network.Client
 	inputHandlers   map[string]InputHandler
-	messageHandlers map[uint64]MessageHandler
+	messageHandlers map[messageID.MessageId]MessageHandler
 	console         *ClientConsole
 	chInput         chan *InputParam
 }
@@ -26,7 +26,7 @@ func NewClient() *Client {
 	c := &Client{
 		cli:             network.NewClient(":8023"),
 		inputHandlers:   map[string]InputHandler{},
-		messageHandlers: map[uint64]MessageHandler{},
+		messageHandlers: map[messageID.MessageId]MessageHandler{},
 		console:         NewClientConsole(),
 	}
 	c.cli.OnMessage = c.OnMessage
@@ -42,23 +42,19 @@ func (c *Client) Run() {
 			select {
 			case input := <-c.chInput:
 				fmt.Printf("cmd:%s,param:%v  <<<\t \n", input.Command, input.Param)
-				bytes, err := json.Marshal(input.Param)
-				if err == nil {
-					c.cli.ChMsg <- &network.Message{
-						ID:   1,
-						Data: bytes,
-					}
+				inputHandler := c.inputHandlers[input.Command]
+				if inputHandler != nil {
+					inputHandler(input)
 				}
-
 			}
 		}
 	}()
 	go c.console.Run()
-	go c.cli.Run()
+	//go c.cli.Run()
 }
 
 func (c *Client) OnMessage(packet *network.ClientPacket) {
-	if handler, ok := c.messageHandlers[packet.Msg.ID]; ok {
+	if handler, ok := c.messageHandlers[messageID.MessageId(packet.Msg.ID)]; ok {
 		handler(packet)
 	}
 }

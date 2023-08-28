@@ -3,8 +3,10 @@ package player
 import (
 	"errors"
 	"fmt"
-	"github.com/Allen9012/AllenServer/demo/chat"
 	"github.com/Allen9012/AllenServer/demo/function"
+	"github.com/Allen9012/AllenServer/demo/network"
+	"github.com/Allen9012/AllenServer/demo/network/protocol/gen/player"
+	"google.golang.org/protobuf/proto"
 )
 
 /**
@@ -17,7 +19,7 @@ import (
 
 var ERR_TYPE_CONVERT = errors.New("type convert error")
 
-type Handler func(interface{})
+type Handler func(packet *network.SessionPacket)
 
 //func (p *Player) AddFriend(data interface{}) (bool, error) {
 //	FriendID, ok := data.(uint64)
@@ -32,10 +34,14 @@ type Handler func(interface{})
 //	return false, nil
 //}
 
-func (p *Player) AddFriend(data interface{}) {
-	FriendID := data.(uint64)
-	if !function.CheckInNumberSlice(FriendID, p.FriendList) {
-		p.FriendList = append(p.FriendList, FriendID)
+func (p *Player) AddFriend(packet *network.SessionPacket) {
+	req := &player.CSAddFriend{}
+	if err := proto.Unmarshal(packet.Msg.Data, req); err != nil {
+		fmt.Println("CSAddFriend Unmarshal error")
+		return
+	}
+	if !function.CheckInNumberSlice(req.UID, p.FriendList) {
+		p.FriendList = append(p.FriendList, req.UID)
 	}
 }
 
@@ -49,13 +55,21 @@ func (p *Player) AddFriend(data interface{}) {
 //	return true, nil
 //}
 
-func (p *Player) DelFriend(data interface{}) {
-	FriendID := data.(uint64)
-	p.FriendList = function.DelEleInSlice(FriendID, p.FriendList)
+func (p *Player) DelFriend(packet *network.SessionPacket) {
+	req := &player.CSDelFriend{}
+	if err := proto.Unmarshal(packet.Msg.Data, req); err != nil {
+		fmt.Println("CSAddFriend Unmarshal error")
+		return
+	}
+	p.FriendList = function.DelEleInSlice(req.UID, p.FriendList)
 }
 
-func (p *Player) HandleChatMsg(data interface{}) {
-	chatMsg := data.(chat.Msg)
-	fmt.Println(chatMsg)
+func (p *Player) HandleChatMsg(packet *network.SessionPacket) {
+	req := &player.CSSendChatMsg{}
+	if err := proto.Unmarshal(packet.Msg.Data, req); err != nil {
+		fmt.Println("CSAddFriend Unmarshal error")
+		return
+	}
+	fmt.Println(req.Msg.Content)
 	//	todo， 收到消息，传送给客户端
 }
