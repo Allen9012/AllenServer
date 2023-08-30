@@ -180,7 +180,7 @@
               
               
                 <li>
-                  <a href="#messageId.MessageId"><span class="badge">E</span>MessageId</a>
+                  <a href="#messageID.MessageId"><span class="badge">E</span>MessageId</a>
                 </li>
               
               
@@ -195,6 +195,10 @@
               
                 <li>
                   <a href="#player.CSAddFriend"><span class="badge">M</span>CSAddFriend</a>
+                </li>
+              
+                <li>
+                  <a href="#player.CSCreateUser"><span class="badge">M</span>CSCreateUser</a>
                 </li>
               
                 <li>
@@ -215,6 +219,10 @@
               
                 <li>
                   <a href="#player.SCAddFriend"><span class="badge">M</span>SCAddFriend</a>
+                </li>
+              
+                <li>
+                  <a href="#player.SCCreateUser"><span class="badge">M</span>SCCreateUser</a>
                 </li>
               
                 <li>
@@ -249,7 +257,7 @@
       
 
       
-        <h3 id="messageId.MessageId">MessageId</h3>
+        <h3 id="messageID.MessageId">MessageId</h3>
         <p></p>
         <table class="enum-table">
           <thead>
@@ -264,14 +272,26 @@
               </tr>
             
               <tr>
-                <td>CSLogin</td>
+                <td>CSCreatePlayer</td>
                 <td>50001</td>
                 <td><p></p></td>
               </tr>
             
               <tr>
-                <td>SCLogin</td>
+                <td>SCCreatePlayer</td>
                 <td>50002</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>CSLogin</td>
+                <td>50003</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>SCLogin</td>
+                <td>50004</td>
                 <td><p></p></td>
               </tr>
             
@@ -350,6 +370,37 @@
 
         
       
+        <h3 id="player.CSCreateUser">CSCreateUser</h3>
+        <p></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>UserName</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>Password</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
         <h3 id="player.CSDelFriend">CSDelFriend</h3>
         <p></p>
 
@@ -385,8 +436,15 @@
             <tbody>
               
                 <tr>
-                  <td>UID</td>
-                  <td><a href="#uint64">uint64</a></td>
+                  <td>UserName</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>Password</td>
+                  <td><a href="#string">string</a></td>
                   <td></td>
                   <td><p> </p></td>
                 </tr>
@@ -420,6 +478,13 @@
                   <td><a href="#player.ChatMessage">ChatMessage</a></td>
                   <td></td>
                   <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>Category</td>
+                  <td><a href="#int32">int32</a></td>
+                  <td></td>
+                  <td><p>聊天类型 </p></td>
                 </tr>
               
             </tbody>
@@ -481,6 +546,13 @@
           </table>
 
           
+
+        
+      
+        <h3 id="player.SCCreateUser">SCCreateUser</h3>
+        <p></p>
+
+        
 
         
       

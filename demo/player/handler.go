@@ -1,7 +1,6 @@
 package player
 
 import (
-	"errors"
 	"fmt"
 	"github.com/Allen9012/AllenServer/demo/function"
 	"github.com/Allen9012/AllenServer/demo/network"
@@ -17,9 +16,9 @@ import (
   @modified by:
 **/
 
-var ERR_TYPE_CONVERT = errors.New("type convert error")
+//var ERR_TYPE_CONVERT = errors.New("type convert error")
 
-type Handler func(packet *network.SessionPacket)
+type Handler func(packet *network.Message)
 
 //func (p *Player) AddFriend(data interface{}) (bool, error) {
 //	FriendID, ok := data.(uint64)
@@ -34,9 +33,9 @@ type Handler func(packet *network.SessionPacket)
 //	return false, nil
 //}
 
-func (p *Player) AddFriend(packet *network.SessionPacket) {
+func (p *Player) AddFriend(packet *network.Message) {
 	req := &player.CSAddFriend{}
-	if err := proto.Unmarshal(packet.Msg.Data, req); err != nil {
+	if err := proto.Unmarshal(packet.Data, req); err != nil {
 		fmt.Println("CSAddFriend Unmarshal error")
 		return
 	}
@@ -55,18 +54,18 @@ func (p *Player) AddFriend(packet *network.SessionPacket) {
 //	return true, nil
 //}
 
-func (p *Player) DelFriend(packet *network.SessionPacket) {
+func (p *Player) DelFriend(packet *network.Message) {
 	req := &player.CSDelFriend{}
-	if err := proto.Unmarshal(packet.Msg.Data, req); err != nil {
+	if err := proto.Unmarshal(packet.Data, req); err != nil {
 		fmt.Println("CSAddFriend Unmarshal error")
 		return
 	}
 	p.FriendList = function.DelEleInSlice(req.UID, p.FriendList)
 }
 
-func (p *Player) HandleChatMsg(packet *network.SessionPacket) {
+func (p *Player) HandleChatMsg(packet *network.Message) {
 	req := &player.CSSendChatMsg{}
-	if err := proto.Unmarshal(packet.Msg.Data, req); err != nil {
+	if err := proto.Unmarshal(packet.Data, req); err != nil {
 		fmt.Println("CSAddFriend Unmarshal error")
 		return
 	}

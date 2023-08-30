@@ -16,11 +16,11 @@ import (
 
 // Session 连接
 type Session struct {
-	UID            int64
+	UID            uint64
 	Conn           net.Conn
 	IsClose        bool
 	packer         IPacker
-	writeCh        chan *SessionPacket
+	WriteCh        chan *Message
 	IsPlayerOnline bool
 	MessageHandler func(packet *SessionPacket)
 	//
@@ -31,7 +31,7 @@ func NewSession(conn net.Conn) *Session {
 	return &Session{
 		Conn:    conn,
 		packer:  NormalPackerInstance,
-		writeCh: make(chan *SessionPacket, 1),
+		WriteCh: make(chan *Message, 1),
 	}
 }
 
@@ -54,25 +54,20 @@ func (s *Session) Read() {
 			continue
 		}
 		fmt.Println("server receive message:", string(message.Data))
+		// 处理消息
 		s.MessageHandler(&SessionPacket{
 			Msg:  message,
 			Sess: s,
 		})
-		s.writeCh <- &SessionPacket{
-			Msg: &Message{
-				ID:   999,
-				Data: []byte("server receive message"),
-			},
-			Sess: s,
-		}
 	}
 }
 
+// Write 持续将WriteCh信息发送出去
 func (s *Session) Write() {
 	for {
 		select {
-		case resp := <-s.writeCh:
-			s.send(resp.Msg)
+		case resp := <-s.WriteCh:
+			s.send(resp)
 		}
 	}
 }
@@ -92,4 +87,8 @@ func (s *Session) send(message *Message) {
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+func (s *Session) SendMsg(msg *Message) {
+	s.WriteCh <- msg
 }

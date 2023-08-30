@@ -1,5 +1,7 @@
 package world
 
+import "github.com/Allen9012/AllenServer/demo/network/protocol/gen/messageID"
+
 /**
   Copyright © 2023 github.com/Allen9012 All rights reserved.
   @author: Allen
@@ -9,5 +11,6 @@ package world
 **/
 
 func (mm *MgrMgr) HandlerRegister() {
-	mm.Handlers[1] = mm.UserLogin
+	mm.Handlers[messageID.MessageId_CSLogin] = mm.UserLogin
+	mm.Handlers[messageID.MessageId_SCCreatePlayer] = mm.CreatePlayer
 }

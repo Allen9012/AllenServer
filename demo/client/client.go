@@ -50,7 +50,7 @@ func (c *Client) Run() {
 		}
 	}()
 	go c.console.Run()
-	//go c.cli.Run()
+	go c.cli.Run()
 }
 
 func (c *Client) OnMessage(packet *network.ClientPacket) {

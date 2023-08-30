@@ -17,9 +17,9 @@ import (
 type Player struct {
 	UID            uint64
 	FriendList     []uint64 //朋友
-	HandlerParamCh chan *network.SessionPacket
+	HandlerParamCh chan *network.Message
 	handlers       map[messageID.MessageId]Handler
-	session        *network.Session
+	Session        *network.Session
 }
 
 // NewPlayer   TODO 分布式ID生成
@@ -37,7 +37,7 @@ func (p *Player) Run() {
 	for {
 		select {
 		case handlerParam := <-p.HandlerParamCh:
-			if fn, ok := p.handlers[messageID.MessageId(handlerParam.Msg.ID)]; ok {
+			if fn, ok := p.handlers[messageID.MessageId(handlerParam.ID)]; ok {
 				fn(handlerParam)
 			}
 		}

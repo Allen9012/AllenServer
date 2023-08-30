@@ -1,6 +1,10 @@
 package main
 
-import "github.com/Allen9012/AllenServer/demo/network/protocol/gen/messageID"
+import (
+	"github.com/Allen9012/AllenServer/demo/network"
+	"github.com/Allen9012/AllenServer/demo/network/protocol/gen/messageID"
+	"google.golang.org/protobuf/proto"
+)
 
 /*
 	Copyright © 2023 github.com/Allen9012 All rights reserved.
@@ -11,12 +15,30 @@ import "github.com/Allen9012/AllenServer/demo/network/protocol/gen/messageID"
 */
 
 func (c *Client) InputHandlerRegister() {
+	c.inputHandlers[messageID.MessageId_CSCreatePlayer.String()] = c.CreatePlayer
 	c.inputHandlers[messageID.MessageId_CSLogin.String()] = c.Login
 	c.inputHandlers[messageID.MessageId_CSAddFriend.String()] = c.AddFriend
 	c.inputHandlers[messageID.MessageId_CSDelFriend.String()] = c.DelFriend
 	c.inputHandlers[messageID.MessageId_CSSendChatMsg.String()] = c.SendChatMsg
 }
 
-//login 10001 123456
-//add_friend 10002
-//del_friend 10003
+// GetMessageIdByCmd cmd字符串转化为常量
+func (c *Client) GetMessageIdByCmd(cmd string) messageID.MessageId {
+	mid, ok := messageID.MessageId_value[cmd]
+	if ok {
+		return messageID.MessageId(mid)
+	}
+	return messageID.MessageId_None
+}
+
+// Transport 最后加密消息和发送消息
+func (c *Client) Transport(id messageID.MessageId, message proto.Message) {
+	bytes, err := proto.Marshal(message)
+	if err != nil {
+		return
+	}
+	c.cli.ChMsg <- &network.Message{
+		ID:   uint64(id),
+		Data: bytes,
+	}
+}

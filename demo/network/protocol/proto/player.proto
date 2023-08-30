@@ -4,7 +4,8 @@ package player;
 option go_package="/player";
 
 message CSLogin{
-  uint64 UID =1;
+  string  UserName=1;
+  string  Password=2;
 }
 
 message SCLogin{
@@ -31,6 +32,7 @@ message SCDelFriend{
 message CSSendChatMsg{
   uint64  UID =1;
   ChatMessage msg=2;
+  int32  Category =3; //聊天类型
 }
 
 message SCSendChatMsg{
@@ -40,4 +42,13 @@ message SCSendChatMsg{
 message ChatMessage{
   string Content =1;
   repeated bytes  extra=2;
+}
+
+message CSCreateUser{
+  string UserName = 1;
+  string Password = 2;
+}
+
+message SCCreateUser{
+
 }

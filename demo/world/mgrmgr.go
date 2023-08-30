@@ -3,6 +3,7 @@ package world
 import (
 	"github.com/Allen9012/AllenServer/demo/manager"
 	"github.com/Allen9012/AllenServer/demo/network"
+	"github.com/Allen9012/AllenServer/demo/network/protocol/gen/messageID"
 )
 
 /**
@@ -16,7 +17,7 @@ import (
 type MgrMgr struct {
 	Pm              *manager.PlayerMgr
 	Server          *network.Server
-	Handlers        map[uint64]func(message *network.SessionPacket)
+	Handlers        map[messageID.MessageId]func(message *network.SessionPacket)
 	chSessionPacket chan *network.SessionPacket
 }
 
@@ -36,7 +37,12 @@ func (mm *MgrMgr) Run() {
 
 // OnSessionPacket 判读消息如果注册了，则可以handle
 func (mm *MgrMgr) OnSessionPacket(packet *network.SessionPacket) {
-	if handler, ok := mm.Handlers[packet.Msg.ID]; ok {
+	if handler, ok := mm.Handlers[messageID.MessageId(packet.Msg.ID)]; ok {
 		handler(packet)
+		return
+	}
+	// 发送给player
+	if p := mm.Pm.GetPlayer(packet.Sess.UID); p != nil {
+		p.HandlerParamCh <- packet.Msg
 	}
 }
