@@ -1,9 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"github.com/Allen9012/AllenServer/demo/logger"
 	"github.com/Allen9012/AllenServer/demo/network"
 	"github.com/Allen9012/AllenServer/demo/network/protocol/gen/messageID"
+	"os"
+	"syscall"
 )
 
 /**
@@ -41,7 +43,6 @@ func (c *Client) Run() {
 		for {
 			select {
 			case input := <-c.chInput:
-				fmt.Printf("cmd:%s,param:%v  <<<\t \n", input.Command, input.Param)
 				inputHandler := c.inputHandlers[input.Command]
 				if inputHandler != nil {
 					inputHandler(input)
@@ -57,4 +58,19 @@ func (c *Client) OnMessage(packet *network.ClientPacket) {
 	if handler, ok := c.messageHandlers[messageID.MessageId(packet.Msg.ID)]; ok {
 		handler(packet)
 	}
+}
+
+func (c *Client) OnSystemSignal(signal os.Signal) bool {
+	logger.Info("[Client] 收到信号 %v \n", signal)
+	tag := true
+	switch signal {
+	case syscall.SIGHUP:
+		//todo
+	case syscall.SIGPIPE:
+	default:
+		logger.Info("[Client] 收到信号准备退出...")
+		tag = false
+
+	}
+	return tag
 }

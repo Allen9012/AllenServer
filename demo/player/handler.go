@@ -2,9 +2,9 @@ package player
 
 import (
 	"fmt"
-	"github.com/Allen9012/AllenServer/demo/function"
 	"github.com/Allen9012/AllenServer/demo/network"
 	"github.com/Allen9012/AllenServer/demo/network/protocol/gen/player"
+	"github.com/Allen9012/sugar"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -39,7 +39,7 @@ func (p *Player) AddFriend(packet *network.Message) {
 		fmt.Println("CSAddFriend Unmarshal error")
 		return
 	}
-	if !function.CheckInNumberSlice(req.UID, p.FriendList) {
+	if !sugar.CheckInSlice(req.UID, p.FriendList) {
 		p.FriendList = append(p.FriendList, req.UID)
 	}
 }
@@ -60,7 +60,7 @@ func (p *Player) DelFriend(packet *network.Message) {
 		fmt.Println("CSAddFriend Unmarshal error")
 		return
 	}
-	p.FriendList = function.DelEleInSlice(req.UID, p.FriendList)
+	p.FriendList = sugar.DelOneInSlice(req.UID, p.FriendList)
 }
 
 func (p *Player) HandleChatMsg(packet *network.Message) {

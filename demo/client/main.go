@@ -1,5 +1,7 @@
 package main
 
+import "github.com/Allen9012/sugar"
+
 /**
   Copyright © 2023 github.com/Allen9012 All rights reserved.
   @author: Allen
@@ -12,5 +14,5 @@ func main() {
 	c := NewClient()
 	c.InputHandlerRegister()
 	c.Run()
-	select {}
+	sugar.WaitSignal(c.OnSystemSignal)
 }
