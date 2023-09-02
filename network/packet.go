@@ -1,7 +1,5 @@
 package network
 
-import "net"
-
 /**
   Copyright © 2023 github.com/Allen9012 All rights reserved.
   @author: Allen
@@ -10,12 +8,7 @@ import "net"
   @modified by:
 **/
 
-type ClientPacket struct {
+type Packet struct {
 	Msg  *Message
-	Conn net.Conn
-}
-
-type SessionPacket struct {
-	Msg  *Message
-	Sess *Session
+	Conn *TcpSession
 }

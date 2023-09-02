@@ -12,5 +12,6 @@ import "io"
 
 type IPacker interface {
 	Pack(message *Message) ([]byte, error)
+	Read(*TcpSession) ([]byte, error)
 	Unpack(reader io.Reader) (*Message, error)
 }
