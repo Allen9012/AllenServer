@@ -1,6 +1,6 @@
-package activity
+package player
 
-import "sync"
+import "github.com/Allen9012/AllenServer/business/module/base"
 
 /**
   Copyright © 2023 github.com/Allen9012 All rights reserved.
@@ -10,38 +10,29 @@ import "sync"
   @modified by:
 **/
 
+// Manager 维护在线玩家
 type Manager struct {
 	*base.MetricsBase
+	players map[uint64]*Player
+	addPCh  chan *Player
 }
 
-var (
-	instance *Manager
-	onceInit sync.Once
-)
-
-func GetMe() *Manager {
-	onceInit.Do(func() {
-		instance = &Manager{}
-	})
-	return instance
-}
-
-func (a *Manager) OnStart() {
+func (pm *Manager) OnStart() {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (a *Manager) AfterStart() {
+func (pm *Manager) AfterStart() {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (a *Manager) OnStop() {
+func (pm *Manager) OnStop() {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (a *Manager) AfterStop() {
+func (pm *Manager) AfterStop() {
 	//TODO implement me
 	panic("implement me")
 }
