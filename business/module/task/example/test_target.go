@@ -1,7 +1,7 @@
 package example
 
 import (
-	"github.com/Allen9012/AllenServer/business/module/task"
+	"github.com/Allen9012/AllenServer/business/module/condition/event"
 )
 
 /**
@@ -26,7 +26,7 @@ func (T TTarget) CheckDone() bool {
 	return T.Done
 }
 
-func (T *TTarget) OnNotify(event task.Event) {
+func (T *TTarget) OnNotify(event event.Event) {
 	e := event.(*TEvent)
 	if e.Data == T.Data {
 		T.Done = true

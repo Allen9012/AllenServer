@@ -19,3 +19,8 @@ func (m *MetricsBase) GetName() string {
 func (m *MetricsBase) SetName(str string) {
 	m.Name = str
 }
+
+func (m *MetricsBase) Description() string {
+	// TODO implement me
+	panic("implement me")
+}

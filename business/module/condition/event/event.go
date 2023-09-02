@@ -1,4 +1,6 @@
-package task
+package event
+
+import "github.com/Allen9012/AllenServer/business/module/condition"
 
 /**
   Copyright © 2023 github.com/Allen9012 All rights reserved.
@@ -10,4 +12,6 @@ package task
 
 type Event interface {
 	Notify()
+	Attach(condition condition.Condition)
+	Detach(id uint32)
 }

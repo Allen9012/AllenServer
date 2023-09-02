@@ -1,5 +1,9 @@
 package task
 
+import (
+	"github.com/Allen9012/AllenServer/business/module/condition/event"
+)
+
 /**
   Copyright © 2023 github.com/Allen9012 All rights reserved.
   @author: Allen
@@ -10,7 +14,7 @@ package task
 
 type Target interface {
 	CheckDone() bool
-	OnNotify(Event)
+	OnNotify(event.Event)
 	GetTargetId() uint32
 	SetTaskCB(func())
 }
@@ -27,7 +31,7 @@ func (t *TargetBase) CheckDone() bool {
 	return false
 }
 
-func (t *TargetBase) OnNotify(event Event) {
+func (t *TargetBase) OnNotify(event event.Event) {
 
 }
 
