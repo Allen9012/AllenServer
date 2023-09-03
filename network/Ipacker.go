@@ -1,6 +1,9 @@
 package network
 
-import "io"
+import (
+	"github.com/Allen9012/AllenServer/network/example"
+	"io"
+)
 
 /*
 	Copyright © 2023 github.com/Allen9012 All rights reserved.
@@ -12,6 +15,6 @@ import "io"
 
 type IPacker interface {
 	Pack(message *Message) ([]byte, error)
-	Read(*TcpSession) ([]byte, error)
+	Read(*example.TcpSession) ([]byte, error)
 	Unpack(reader io.Reader) (*Message, error)
 }

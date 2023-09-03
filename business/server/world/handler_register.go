@@ -10,7 +10,7 @@ import "github.com/Allen9012/AllenServer/network/protocol/gen/messageID"
   @modified by:
 **/
 
-func (mm *MgrMgr) HandlerRegister() {
-	mm.Handlers[messageID.MessageId_CSLogin] = mm.UserLogin
-	mm.Handlers[messageID.MessageId_SCCreatePlayer] = mm.CreatePlayer
+func (w *World) HandlerRegister() {
+	w.Handlers[messageID.MessageId_CSCreatePlayer] = w.CreatePlayer
+	w.Handlers[messageID.MessageId_CSLogin] = w.UserLogin
 }

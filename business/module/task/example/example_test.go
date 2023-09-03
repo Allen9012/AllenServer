@@ -2,21 +2,13 @@ package example
 
 import (
 	"fmt"
-	"github.com/Allen9012/AllenServer/business/module/task"
+	"greatestworks/business/module/condition"
 	"testing"
 )
 
-/*
-	Copyright © 2023 github.com/Allen9012 All rights reserved.
-	@author: Allen
-	@since: 2023/9/1
-	@desc:
-	@modified by:
-*/
-
-func TestName(t *testing.T) {
+func TestEvent(t *testing.T) {
 	te := TEvent{
-		Subscribers: make([]task.Target, 0),
+		Subscribers: make([]condition.Condition, 0),
 	}
 	tg := &TTarget{
 		Id:   111,
@@ -25,5 +17,10 @@ func TestName(t *testing.T) {
 	te.Attach(tg)
 	te.Data = 1
 	te.Notify()
-	fmt.Println("CheckDone:", tg.CheckDone())
+	fmt.Println("CheckArrived:", tg.CheckArrived())
+}
+
+func TestTask(t *testing.T) {
+	NewTTask(nil)
+
 }

@@ -1,22 +1,15 @@
 package example
 
 import (
-	task2 "github.com/Allen9012/AllenServer/business/module/task"
+	"greatestworks/business/module/condition"
+	task2 "greatestworks/business/module/task"
 )
-
-/**
-  Copyright © 2023 github.com/Allen9012 All rights reserved.
-  @author: Allen
-  @since: 2023/9/1
-  @desc:
-  @modified by:
-**/
 
 type TTask struct {
 	Conf    *task2.Config
 	Next    *TTask
 	Status  task2.Status
-	Targets []task2.Target
+	Targets []condition.Condition
 }
 
 func NewTTask(config *task2.Config) *TTask {
@@ -27,23 +20,22 @@ func NewTTask(config *task2.Config) *TTask {
 
 }
 
-func (t *TTask) Accept(config *task2.Config) {
-	t.Status = task2.ACCEPT
-}
-
-func (t *TTask) Finish() {
-	t.Status = task2.FINISH
-
+func (t *TTask) SetStatus(status task2.Status) {
+	t.Status = status
 }
 
 func (t *TTask) TargetDoneCallBack() {
 	count := 0
 	for _, target := range t.Targets {
-		if target.CheckDone() {
+		if target.CheckArrived() {
 			count++
 		}
 	}
 	if count == len(t.Targets) {
-		t.Finish()
+		t.SetStatus(task2.FINISH)
 	}
+}
+
+func (t *TTask) GetTargets() []task2.Target {
+	return nil
 }

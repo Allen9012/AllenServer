@@ -17,42 +17,31 @@ import (
   @modified by:
 **/
 
-func (mm *MgrMgr) UserLogin(message *network.SessionPacket) {
+func (w *World) CreatePlayer(message *network.Packet) {
+	msg := &player.CSCreateUser{}
+	err := proto.Unmarshal(message.Msg.Data, msg)
+	if err != nil {
+		return
+	}
+	fmt.Println("[World.CreatePlayer]", msg)
+	w.SendMsg(uint64(messageID.MessageId_SCCreatePlayer), &player.SCCreateUser{}, message.Conn)
+
+}
+
+func (w *World) UserLogin(message *network.Packet) {
 	msg := &player.CSLogin{}
 	err := proto.Unmarshal(message.Msg.Data, msg)
 	if err != nil {
 		return
 	}
 	newPlayer := logicPlayer.NewPlayer()
+	// TODO ID生成
 	newPlayer.UID = 111
-	//newPlayer.UID = uint64(time.Now().Unix())
-	newPlayer.HandlerParamCh = message.Sess.WriteCh
-	message.Sess.IsPlayerOnline = true
-	message.Sess.UID = newPlayer.UID
-	newPlayer.Session = message.Sess
-	mm.Pm.Add(newPlayer)
+	newPlayer.Session = message.Conn
+	w.Pm.Add(newPlayer)
+
 }
 
-func (mm *MgrMgr) CreatePlayer(message *network.SessionPacket) {
-	msg := &player.CSCreateUser{}
-	err := proto.Unmarshal(message.Msg.Data, msg)
-	if err != nil {
-		return
-	}
-	//TODO 存储逻辑
-	fmt.Println("[MgrMgr.CreatePlayer]", msg)
-	// 回复创角消息
-	mm.SendMsg(uint64(messageID.MessageId_SCCreatePlayer), &player.SCCreateUser{}, message.Sess)
-}
-
-func (mm *MgrMgr) SendMsg(id uint64, message proto.Message, session *network.Session) {
-	bytes, err := proto.Marshal(message)
-	if err != nil {
-		return
-	}
-	rsp := &network.Message{
-		ID:   id,
-		Data: bytes,
-	}
-	session.SendMsg(rsp)
+func (w *World) SendMsg(id uint64, message proto.Message, session *network.TcpConnX) {
+	session.AsyncSend(id, message)
 }

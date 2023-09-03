@@ -1,6 +1,9 @@
 package player
 
 import (
+	"github.com/Allen9012/AllenServer/business/module/chat"
+	"github.com/Allen9012/AllenServer/business/module/friend"
+	"github.com/Allen9012/AllenServer/business/module/task"
 	"github.com/Allen9012/AllenServer/network"
 	"github.com/Allen9012/AllenServer/network/protocol/gen/messageID"
 )
@@ -16,10 +19,11 @@ import (
 // Player 玩家
 type Player struct {
 	UID            uint64
-	FriendList     []uint64 //朋友
 	HandlerParamCh chan *network.Message
-	handlers       map[messageID.MessageId]Handler
-	Session        *network.Session
+	Session        *network.TcpConnX
+	FriendSystem   *friend.System
+	PrivateChat    *chat.PrivateChat
+	taskData       *task.Data
 }
 
 // NewPlayer   TODO 分布式ID生成

@@ -68,24 +68,24 @@ func (p *BufferPacker) SetMsgLen(lenMsgLen int32, minMsgLen uint32, maxMsgLen ui
 }
 
 // Read goroutine safe
-func (p *BufferPacker) Read(conn *TcpSession) ([]byte, error) {
+func (p *BufferPacker) Read(conn ConnReal) ([]byte, error) {
 
-	p.receiveBuff.EnsureWritableBytes(p.lenMsgLen)
+	p.recvBuff.EnsureWritableBytes(p.lenMsgLen)
 
-	readLen, err := io.ReadFull(conn, p.receiveBuff.WriteBuff()[:p.lenMsgLen])
+	readLen, err := io.ReadFull(conn, p.recvBuff.WriteBuff()[:p.lenMsgLen])
 	// read len
 	if err != nil {
 		return nil, fmt.Errorf("%v readLen:%v", err, readLen)
 	}
-	p.receiveBuff.WriteBytes(int32(readLen))
+	p.recvBuff.WriteBytes(int32(readLen))
 
 	// parse len
 	var msgLen uint32
 	switch p.lenMsgLen {
 	case 2:
-		msgLen = uint32(p.receiveBuff.ReadInt16())
+		msgLen = uint32(p.recvBuff.ReadInt16())
 	case 4:
-		msgLen = uint32(p.receiveBuff.ReadInt32())
+		msgLen = uint32(p.recvBuff.ReadInt32())
 	}
 
 	// check len
@@ -95,27 +95,28 @@ func (p *BufferPacker) Read(conn *TcpSession) ([]byte, error) {
 		return nil, errors.New("message too short")
 	}
 
-	p.receiveBuff.EnsureWritableBytes(int32(msgLen))
+	p.recvBuff.EnsureWritableBytes(int32(msgLen))
 
-	rLen, err := io.ReadFull(conn, p.receiveBuff.WriteBuff()[:msgLen])
+	rLen, err := io.ReadFull(conn, p.recvBuff.WriteBuff()[:msgLen])
 	if err != nil {
 		return nil, fmt.Errorf("%v msgLen:%v readLen:%v", err, msgLen, rLen)
 	}
-	p.receiveBuff.WriteBytes(int32(rLen))
+	p.recvBuff.WriteBytes(int32(rLen))
 
 	/*
 		// 保留了2字节flag 暂时未处理
 		var flag uint16
-		flag = uint16(p.receiveBuff.ReadInt16())
+		flag = uint16(p.recvBuff.ReadInt16())
 	*/
-	p.receiveBuff.Skip(2) // 跳过2字节保留字段
+	p.recvBuff.Skip(2) // 跳过2字节保留字段
 
 	// 减去2字节的保留字段长度
-	return p.receiveBuff.NextBytes(int32(msgLen - 2)), nil
+	return p.recvBuff.NextBytes(int32(msgLen - 2)), nil
+
 }
 
 // goroutine safe
-func (p *BufferPacker) Write(conn *TcpSession, buff ...byte) error {
+func (p *BufferPacker) Write(conn ConnReal, buff ...byte) error {
 	// get len
 	msgLen := uint32(len(buff))
 
@@ -144,6 +145,84 @@ func (p *BufferPacker) Write(conn *TcpSession, buff ...byte) error {
 
 	return err
 }
+
+//// Read goroutine safe
+//func (p *BufferPacker) Read(conn *TcpSession) ([]byte, error) {
+//
+//	p.receiveBuff.EnsureWritableBytes(p.lenMsgLen)
+//
+//	readLen, err := io.ReadFull(conn, p.receiveBuff.WriteBuff()[:p.lenMsgLen])
+//	// read len
+//	if err != nil {
+//		return nil, fmt.Errorf("%v readLen:%v", err, readLen)
+//	}
+//	p.receiveBuff.WriteBytes(int32(readLen))
+//
+//	// parse len
+//	var msgLen uint32
+//	switch p.lenMsgLen {
+//	case 2:
+//		msgLen = uint32(p.receiveBuff.ReadInt16())
+//	case 4:
+//		msgLen = uint32(p.receiveBuff.ReadInt32())
+//	}
+//
+//	// check len
+//	if msgLen > p.maxMsgLen {
+//		return nil, errors.New("message too long")
+//	} else if msgLen < p.minMsgLen {
+//		return nil, errors.New("message too short")
+//	}
+//
+//	p.receiveBuff.EnsureWritableBytes(int32(msgLen))
+//
+//	rLen, err := io.ReadFull(conn, p.receiveBuff.WriteBuff()[:msgLen])
+//	if err != nil {
+//		return nil, fmt.Errorf("%v msgLen:%v readLen:%v", err, msgLen, rLen)
+//	}
+//	p.receiveBuff.WriteBytes(int32(rLen))
+//
+//	/*
+//		// 保留了2字节flag 暂时未处理
+//		var flag uint16
+//		flag = uint16(p.receiveBuff.ReadInt16())
+//	*/
+//	p.receiveBuff.Skip(2) // 跳过2字节保留字段
+//
+//	// 减去2字节的保留字段长度
+//	return p.receiveBuff.NextBytes(int32(msgLen - 2)), nil
+//}
+//
+//// goroutine safe
+//func (p *BufferPacker) Write(conn *TcpSession, buff ...byte) error {
+//	// get len
+//	msgLen := uint32(len(buff))
+//
+//	// check len
+//	if msgLen > p.maxMsgLen {
+//		return errors.New("message too long")
+//	} else if msgLen < p.minMsgLen {
+//		return errors.New("message too short")
+//	}
+//
+//	// write len
+//	switch p.lenMsgLen {
+//	case 2:
+//		p.sendBuff.AppendInt16(int16(msgLen))
+//	case 4:
+//		p.sendBuff.AppendInt32(int32(msgLen))
+//	}
+//
+//	p.sendBuff.Append(buff)
+//	// write data
+//	writeBuff := p.sendBuff.ReadBuff()[:p.sendBuff.Length()]
+//
+//	_, err := conn.Write(writeBuff)
+//
+//	p.sendBuff.Reset()
+//
+//	return err
+//}
 
 func (p *BufferPacker) reset() {
 	p.receiveBuff = NewByteBuffer()

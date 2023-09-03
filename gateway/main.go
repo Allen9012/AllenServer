@@ -1,4 +1,6 @@
-package gateway
+package main
+
+import "github.com/Allen9012/AllenServer/gateway/gateway"
 
 /**
   Copyright © 2023 github.com/Allen9012 All rights reserved.
@@ -7,3 +9,7 @@ package gateway
   @desc:
   @modified by:
 **/
+
+func main() {
+	gateway.NewServer().Start()
+}
