@@ -1,8 +1,6 @@
 package example
 
-import (
-	"greatestworks/business/module/condition"
-)
+import "github.com/Allen9012/AllenServer/business/module/condition"
 
 type TEvent struct {
 	Data        int

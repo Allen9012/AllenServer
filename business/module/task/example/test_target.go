@@ -1,8 +1,8 @@
 package example
 
 import (
-	"greatestworks/business/module/condition"
-	"greatestworks/business/module/condition/event"
+	"github.com/Allen9012/AllenServer/business/module/condition"
+	"github.com/Allen9012/AllenServer/business/module/condition/event"
 )
 
 type TTarget struct {

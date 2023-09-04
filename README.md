@@ -24,10 +24,11 @@
 ### 目录结构说明
 * `aop`
   - 面向切面的逻辑
-* `server`
-  - 各个节点服务,include login ,gateway ,world,battle
-* `internal`
-  - include automation,event,record,communicate,note,purchase,gameplay 
+* `business`
+  * `server`
+    - 各个节点服务,include login ,gateway ,world,battle
+  * `module`
+    - include automation,event,record,communicate,note,purchase,gameplay 
 * `gre`
   - 运维，部署，工具(createmodule;exel2json)等
 
@@ -39,7 +40,7 @@
 * `system`
   - 该模块的管理，例如数据的CRUD，有 `system` 的模块，其成员实例不具备 独立处理协程.
 * `iplayer`
-  - 定义player需要实现的些方法
+  - 定义player需要实现的方法
 * `handler`
   - 处理从属模块需要的业务逻辑
 * `I*`
@@ -60,38 +61,10 @@
 
  每个 `Player` 实例 拥有自己的协程
 
-### `Scene`
-
- 每个 `Scene` 实例 拥有自己的协程
-
 ### `task`
   * 支持配置多协程处理业务逻辑
   - `Data` 存放 玩家任务实例数据
   - `impl` 任务类型的实现
-### `idea` 
-
-  * 模块之间依赖的属性，借助 `redis` ,`mongo`,`consul`,`nsq`,`rabbitmq`
-  * 服务节点之间的依赖，借助 `redis` ,`mongo`,`consul`,`nsq`,`rabbitmq` 
-  * 服务节点之间的通讯，通过 `rpc`, `tcp`,`nsq`,`rabbitmq`
-  * 客户端与逻辑服务器之间的通讯，通过  `tcp` , `kcp` ,`quic` 
-  * 客户端与登录服之间的通讯，通过 `https`
----------------------------------------------------------------------
-  * 系统模块支持 动态 开关
-  * 协议层 约束参数传递，防外挂
-  * GM 走上帝模式 不用登录某个玩家账号
-  * 支持无死角压测，模块级别压测
-  * 事件驱动
-  * 模块级别 性能参数上报
-  * 数数日志埋点 支持无死角覆盖
-  * 支持 动态扩展，收缩
-  * 代码优雅,命名合理有意义,阅读性高
-----------------------------------------------------------------------
-  * 不在单层直接handle消息,分级分发给各个子协程handle,是突破并发瓶颈必然选择<br>
-    - 1.由于每个模块处理业务速度，频率是不一样的
-    - 2.分散风险，当一个玩法出现不能玩，可以做到不影响其他玩法正常玩
 
 
-### `deployment`
- 
-  * docker + k8s
   

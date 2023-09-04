@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/Allen9012/AllenServer/network/example"
 	"github.com/golang/protobuf/proto"
 	"io"
 	"net"
@@ -31,7 +30,7 @@ func (p *NormalPacker) Pack(msgID uint16, msg interface{}) ([]byte, error) {
 	return buffer, nil
 }
 
-func (p *NormalPacker) Read(conn *example.TcpSession) ([]byte, error) {
+func (p *NormalPacker) Read(conn *TcpConnX) ([]byte, error) {
 	err := conn.Conn.(*net.TCPConn).SetReadDeadline(time.Now().Add(time.Second * 10))
 	if err != nil {
 		return nil, err

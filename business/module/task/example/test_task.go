@@ -1,8 +1,8 @@
 package example
 
 import (
-	"greatestworks/business/module/condition"
-	task2 "greatestworks/business/module/task"
+	"github.com/Allen9012/AllenServer/business/module/condition"
+	task2 "github.com/Allen9012/AllenServer/business/module/task"
 )
 
 type TTask struct {

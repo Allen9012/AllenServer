@@ -39,7 +39,7 @@ type ManagerConfig struct {
 type Config struct {
 	Id              uint32        `json:"id"`
 	Name            string        `json:"name"`
-	DropId          uint32        `json:"dropId"` //
+	DropId          uint32        `json:"dropId"` //掉落
 	Category        int           `json:"category"`
 	Targets         []*TargetConf `json:"targets"`
 	SubmitType      int           `json:"submitType"` //自动提交，手动提交
