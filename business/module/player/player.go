@@ -29,22 +29,18 @@ type Player struct {
 // NewPlayer   TODO 分布式ID生成
 func NewPlayer() *Player {
 	p := &Player{
-		UID:        0,
-		FriendList: make([]uint64, 100),
-		handlers:   make(map[messageID.MessageId]Handler),
+		UID:      0,
+		taskData: task.NewTaskData(),
 	}
-	p.HandlerRegister()
 	return p
 }
 
-// Start 不断处理从HandlerParamCh中的处理参数，从map中去取出对应Handler和处理
+// Start 不断处理从HandlerParamCh中的处理参数，然后取出消息来Handle
 func (p *Player) Start() {
 	for {
 		select {
 		case handlerParam := <-p.HandlerParamCh:
-			if fn, ok := p.handlers[messageID.MessageId(handlerParam.ID)]; ok {
-				fn(handlerParam)
-			}
+			p.Handler(messageID.MessageId(handlerParam.ID), handlerParam)
 		}
 	}
 }
@@ -56,9 +52,13 @@ func (p *Player) Stop() {
 func (p *Player) OnLogin() {
 	//从db加载数据初始化
 	//同步数据给客户端
-
+	p.taskData.LoadFromDB()
 }
 
 func (p *Player) OnLogout() {
 	//存db
+}
+
+func (p *Player) GetTaskData() *task.Data {
+	return p.taskData
 }

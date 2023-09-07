@@ -1,9 +1,5 @@
 package bag
 
-/**
-  Copyright © 2023 github.com/Allen9012 All rights reserved.
-  @author: Allen
-  @since: 2023/9/2
-  @desc:
-  @modified by:
-**/
+// Model 对应DB -> mongo
+type Model struct {
+}

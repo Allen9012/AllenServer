@@ -1,11 +1,11 @@
 package player
 
 import (
-	"fmt"
+	"github.com/Allen9012/AllenServer/business/module/chat"
+	"github.com/Allen9012/AllenServer/business/module/friend"
+	"github.com/Allen9012/AllenServer/business/module/task"
 	"github.com/Allen9012/AllenServer/network"
 	"github.com/Allen9012/AllenServer/network/protocol/gen/messageID"
-	"github.com/Allen9012/AllenServer/network/protocol/gen/player"
-	"github.com/Allen9012/sugar"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -21,44 +21,23 @@ import (
 
 type Handler func(packet *network.Message)
 
-func (p *Player) AddFriend(packet *network.Message) {
-	req := &player.CSAddFriend{}
-
-	err := proto.Unmarshal(packet.Data, req)
-	if err != nil {
-		return
-	}
-
-	if !sugar.CheckInSlice(req.UID, p.FriendList) {
-		p.FriendList = append(p.FriendList, req.UID)
-	}
-
-	p.SendMsg(messageID.MessageId_SCAddFriend, &player.SCSendChatMsg{})
-}
-
-func (p *Player) DelFriend(packet *network.Message) {
-	req := &player.CSDelFriend{}
-	err := proto.Unmarshal(packet.Data, req)
-	if err != nil {
-		return
-	}
-	p.FriendList = sugar.DelOneInSlice(req.UID, p.FriendList)
-
-	p.SendMsg(messageID.MessageId_SCDelFriend, &player.SCDelFriend{})
-}
-
-func (p *Player) HandleChatMsg(packet *network.Message) {
-	req := &player.CSSendChatMsg{}
-	err := proto.Unmarshal(packet.Data, req)
-	if err != nil {
-		return
-	}
-	fmt.Println(req.Msg.Content)
-
-	p.SendMsg(messageID.MessageId_SCSendChatMsg, &player.SCSendChatMsg{})
-}
-
 func (p *Player) SendMsg(ID messageID.MessageId, message proto.Message) {
 	id := uint64(ID)
-	p.Session.AsyncSend(uint16(id), message)
+	p.Session.AsyncSend(id, message)
+}
+
+func (p *Player) Handler(id messageID.MessageId, msg *network.Message) {
+	if handler, _ := friend.GetHandler(id); handler != nil {
+		handler.Fn(p.FriendSystem, msg)
+	}
+	if handler, _ := chat.GetHandler(id); handler != nil {
+		handler.Fn(p.PrivateChat, msg)
+	}
+	if task.IsBelongToHere(id) {
+		task.GetMe().ChIn <- &task.PlayerActionParam{
+			MessageId: id,
+			Player:    p,
+			Packet:    msg,
+		}
+	}
 }

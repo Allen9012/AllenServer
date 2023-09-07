@@ -44,18 +44,18 @@ func (d *Data) SyncAllTasks(player Player) {
 	//todo
 }
 
-func (d *Data) AddTaskCache(eNum EventCategory, taskId uint64) {
-	value, ok := d.taskCache.Load(eNum)
+func (d *Data) AddTaskCache(category EventCategory, taskId uint64) {
+	value, ok := d.taskCache.Load(category)
 	uint64s := make([]uint64, 0)
-	if ok {
+	if ok { // 已经有
 		uint64s = value.([]uint64)
 	}
 	uint64s = append(uint64s, taskId)
-	d.taskCache.Store(eNum, uint64s)
+	d.taskCache.Store(category, uint64s)
 }
 
-func (d *Data) GetTaskCache(eNum EventCategory) []uint64 {
-	if value, ok := d.taskCache.Load(eNum); ok {
+func (d *Data) GetTaskCache(category EventCategory) []uint64 {
+	if value, ok := d.taskCache.Load(category); ok {
 		return value.([]uint64)
 	}
 	return nil

@@ -1,6 +1,6 @@
 package main
 
-import "github.com/Allen9012/AllenServer/demo/network"
+import "github.com/Allen9012/AllenServer/network"
 
 /*
 *

@@ -1,9 +1,22 @@
 package email
 
-/**
-  Copyright © 2023 github.com/Allen9012 All rights reserved.
-  @author: Allen
-  @since: 2023/9/2
-  @desc:
-  @modified by:
-**/
+import "sync"
+
+type MailM struct {
+	Id     uint64 `bson:"id"`
+	ConfId uint32 `bson:"confId"`
+	Status int    `json:"status"`
+	Desc   string `json:"desc"`
+}
+
+type MailStatus int
+
+const (
+	MailStatusUnRead MailStatus = iota + 1
+	MailStatusRead
+	MailStatusDelete
+)
+
+type Data struct {
+	emails sync.Map
+}

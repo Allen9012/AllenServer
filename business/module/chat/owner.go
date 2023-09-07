@@ -1,11 +1,12 @@
 package chat
 
 import (
+	"github.com/Allen9012/AllenServer/network/protocol/gen/messageID"
 	"github.com/nsqio/go-nsq"
 	"google.golang.org/protobuf/proto"
 )
 
-type Owner interface {
+type MangerOwner interface {
 	BroadcastSystemMsg(message proto.Message)
 	BroadcastOnlineChatMsg(message proto.Message)
 	BroadcastCrossZoneChatMsg(message proto.Message)
@@ -39,4 +40,8 @@ type Handler interface {
 	HandleMessage(message nsq.Message) error
 	PublishChatMsg(chatMsg interface{}) error
 	Stop()
+}
+
+type Owner interface {
+	SendMsg(ID messageID.MessageId, message proto.Message)
 }

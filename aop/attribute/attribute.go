@@ -8,6 +8,14 @@ import (
 	"sync"
 )
 
+/**
+  Copyright © 2023 github.com/Allen9012 All rights reserved.
+  @author: Allen
+  @since: 2023/9/2
+  @desc: 任务相关
+  @modified by:
+**/
+
 type Category uint32
 
 const (

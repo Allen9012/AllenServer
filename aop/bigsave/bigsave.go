@@ -5,6 +5,14 @@ import (
 	"encoding/gob"
 )
 
+/**
+  Copyright © 2023 github.com/Allen9012 All rights reserved.
+  @author: Allen
+  @since: 2023/9/2
+  @desc: 大数据类型可以提供压缩
+  @modified by:
+**/
+
 func Encoder[T any](data []T) string {
 	var buf bytes.Buffer
 	encoder := gob.NewEncoder(&buf)
