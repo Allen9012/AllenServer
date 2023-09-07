@@ -3,14 +3,14 @@ package metrics
 import (
 	"bytes"
 	"fmt"
+	"github.com/Allen9012/AllenServer/aop/logging"
+	"github.com/Allen9012/AllenServer/aop/protos"
 	"math"
 	"sort"
 	"strconv"
 	"strings"
 
 	"golang.org/x/exp/maps"
-	"greatestworks/aop/logging"
-	"greatestworks/aop/protos"
 )
 
 // escaper is used to format the labels according to [1]. Prometheus labels can

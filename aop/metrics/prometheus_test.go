@@ -1,13 +1,13 @@
 package metrics_test
 
 import (
-	"AllenServer/utils/metrics"
-	"AllenServer/utils/protos"
 	"bytes"
+	"github.com/Allen9012/AllenServer/aop/metrics"
+	"github.com/Allen9012/AllenServer/aop/protos"
 	"regexp"
 	"testing"
 
-	imetrics "AllenServer/utils/metrics"
+	imetrics "github.com/Allen9012/AllenServer/aop/metrics"
 )
 
 func TestTranslateMetricsToPrometheus(t *testing.T) {

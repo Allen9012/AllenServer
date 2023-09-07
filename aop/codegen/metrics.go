@@ -1,9 +1,5 @@
 package codegen
 
-import (
-	metrics "greatestworks/aop/metrics/impl"
-)
-
 var (
 	// The following metrics are automatically populated for the user.
 	//

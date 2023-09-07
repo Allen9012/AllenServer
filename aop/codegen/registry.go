@@ -3,12 +3,11 @@ package codegen
 import (
 	"errors"
 	"fmt"
-	"greatestworks/aop"
+	"github.com/Allen9012/AllenServer/aop/protos"
 	"reflect"
 	"sync"
 
 	"go.opentelemetry.io/otel/trace"
-	"greatestworks/aop/protos"
 )
 
 // globalRegistry is the global registry used by Register and Registered.

@@ -83,7 +83,7 @@ func AddFriend(s *System, packet *network.Message) {
 	if !sugar.CheckInSlice(req.UID, s.FriendList) {
 		s.FriendList = append(s.FriendList, req.UID)
 	}
-	s.Owner.SendMsg(messageID.MessageId_SCAddFriend, &player.SCSendChatMsg{})
+	s.IPlayer.SendMsg(messageID.MessageId_SCAddFriend, &player.SCSendChatMsg{})
 
 }
 
@@ -95,7 +95,7 @@ func DelFriend(s *System, packet *network.Message) {
 	}
 	s.FriendList = sugar.DelOneInSlice(req.UID, s.FriendList)
 
-	s.Owner.SendMsg(messageID.MessageId_SCDelFriend, &player.SCDelFriend{})
+	s.IPlayer.SendMsg(messageID.MessageId_SCDelFriend, &player.SCDelFriend{})
 }
 
 func GiveFriendItem(s *System, packet *network.Message) {

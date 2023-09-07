@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package  messageID;
+
+option go_package="/messageID";
+
+option csharp_namespace = "messageIdG";
+
+enum MessageId {
+  None =0;
+  //gateway--------
+  CSGatewayLogin       =10001;
+  SCGatewayLogin       =10002;
+  CSGatewayLogout      =10003;
+  SCGatewayLogout      =10004;
+  CSGatewayWorldList   =10005;
+  SCGatewayWorldList   =10006;
+  CSGatewayJoinWorld   =10007;
+  SCGatewayJoinWorld   =10008;
+  CSReconnection       =10009;
+  SCReconnection       =10010;
+  //
+  CSCreatePlayer=50001;
+  SCCreatePlayer=50002;
+  CSLogin=50003;
+  SCLogin=50004;
+
+  //player
+  CSAddFriend=100001;
+  SCAddFriend=100002;
+  CSDelFriend=100003;
+  SCDelFriend=100004;
+  CSSendChatMsg=100005;
+  SCSendChatMsg=100006;
+
+   //
+  ClientRequestObjectSync= 200010;
+  ServerRequestObjectSync= 200011;
+  ServerRequestObjectSyncComplete= 200012;
+  Instantiate= 200020;
+  Destroy= 200021;
+  DestroyNetworkObjects= 200022;
+  SyncTransform= 200030;
+
+
+  //card
+  CSCardAction=300100;
+  SCCardAction=300101;
+  
+  //server 
+  RegisterToGateway     = 70001;
+  RegisterToGatewayRet  = 70002;
+  GatewayForwardPacket  = 70003;
+  ClientOnline          = 70004;
+  ClientOnlineRet       = 70005;
+  ClientOffline         = 70006;
+  ClientOfflineRet      = 70007;
+  RegisterToGame        = 70008;
+  RegisterToGameRet     = 70009;
+  SrvMsgToWorldPlayer   = 70010;
+  SCKick                = 70011;
+  UpdateOnlineInfo      = 70012;
+  UpdateOnlineInfoRet   = 70013;
+  BroadcastChatMsg      = 70014;
+  CSCrossSrvChatMsg     = 70015;
+  SCCrossSrvChatMsg     = 70016;
+  SCSystemMessage       = 70017;
+  CreateGame            = 70018;
+  CreateGameRet         = 70019;
+  SrvMsgToOnlinePlayer  = 70020;
+
+
+  //scene
+  SceneHeartbeat           = 80001;
+  CSJoinScene              = 80002;
+  SCJoinScene              = 80003;
+  SCPlayerJoinScene        = 80004;
+  CSLeaveScene             = 80005;
+  SCLeaveScene             = 80006;
+  SCPlayerEnterScreen      = 80007;
+  SCPlayerLeaveScreen      = 80008;
+  SCPlayerContainer        = 80009;
+  SCPlayerCAIS             = 80010;
+  CSPlayerMove             = 80011;
+  SCPlayerMove             = 80012;
+  CSPlayerGMCmd            = 80013;
+}

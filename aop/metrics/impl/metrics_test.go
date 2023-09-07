@@ -1,15 +1,15 @@
 package impl_test
 
 import (
+	"github.com/Allen9012/AllenServer/aop/metrics/impl"
+	"github.com/Allen9012/AllenServer/aop/protos"
 	"testing"
 
+	imetrics "github.com/Allen9012/AllenServer/aop/metrics"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/uuid"
 	"golang.org/x/exp/maps"
-	imetrics "greatestworks/aop/metrics"
-	"greatestworks/aop/metrics/impl"
-	"greatestworks/aop/protos"
 )
 
 func ExampleCounterMap() {

@@ -1,8 +1,8 @@
 package impl
 
 import (
-	"AllenServer/utils/metrics"
-	"AllenServer/utils/protos"
+	"github.com/Allen9012/AllenServer/aop/metrics"
+	"github.com/Allen9012/AllenServer/aop/protos"
 )
 
 // This file re-exports the user-facing types and functions in runtime/metrics

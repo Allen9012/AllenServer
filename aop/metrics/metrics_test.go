@@ -1,9 +1,9 @@
 package metrics
 
 import (
-	"AllenServer/utils/protos"
 	"crypto/sha256"
 	"fmt"
+	"github.com/Allen9012/AllenServer/aop/protos"
 	"math"
 	"strings"
 	"sync"

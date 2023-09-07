@@ -1,7 +1,7 @@
 package metrics
 
 import (
-	"AllenServer/utils/protos"
+	"github.com/Allen9012/AllenServer/aop/protos"
 	"sync"
 	"testing"
 

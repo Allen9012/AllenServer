@@ -1,8 +1,8 @@
 package metrics_test
 
 import (
-	"greatestworks/aop/metrics"
-	"greatestworks/aop/protos"
+	"github.com/Allen9012/AllenServer/aop/metrics"
+	"github.com/Allen9012/AllenServer/aop/protos"
 )
 
 var (
