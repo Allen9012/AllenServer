@@ -19,7 +19,6 @@
 * 5.事件驱动 (Event driven)
 
 ## Server Frame
-![](images/svr.drawio.png)
 
 ### 目录结构说明
 * `aop`
@@ -56,7 +55,7 @@
 模块与模块之间的联系通过 `player` 为中介，以事件订阅，发布的形式处理 <br>
 每个模块会管理自己激活的事件
 
-![](images/module.drawio.png)
+
 ### `Player`
 
  每个 `Player` 实例 拥有自己的协程
