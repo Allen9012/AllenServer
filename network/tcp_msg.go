@@ -8,15 +8,27 @@ import (
 	"math"
 )
 
+/**
+  Copyright © 2023 github.com/Allen9012 All rights reserved.
+  @author: Allen
+  @since: 2023/9/8
+  @desc: msg
+  @modified by:
+**/
+
+/*
+	MsgParser
+
 // --------------
 // | len | data |
 // --------------
+*/
 type MsgParser struct {
 	LenMsgLen    int
 	MinMsgLen    uint32
 	MaxMsgLen    uint32
 	LittleEndian bool
-
+	// 字节缓存池
 	bytespool.IBytesMempool
 }
 

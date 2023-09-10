@@ -9,6 +9,14 @@ import (
 	"time"
 )
 
+/**
+  Copyright © 2023 github.com/Allen9012 All rights reserved.
+  @author: Allen
+  @since: 2023/9/8
+  @desc: conn
+  @modified by:
+**/
+
 type ConnSet map[net.Conn]struct{}
 
 type TCPConn struct {

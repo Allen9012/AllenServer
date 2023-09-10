@@ -1,6 +1,7 @@
 package network
 
 import (
+	"errors"
 	"github.com/Allen9012/AllenGame/log"
 	"github.com/Allen9012/AllenGame/util/bytespool"
 	"net"
@@ -31,8 +32,9 @@ type TCPServer struct {
 	Addr            string
 	MaxConnNum      int
 	PendingWriteNum int
-	ReadDeadline    time.Duration
-	WriteDeadline   time.Duration
+	// 读写时间限制
+	ReadDeadline  time.Duration
+	WriteDeadline time.Duration
 
 	NewAgent   func(*TCPConn) Agent
 	ln         net.Listener
@@ -40,7 +42,7 @@ type TCPServer struct {
 	mutexConns sync.Mutex
 	wgLn       sync.WaitGroup
 	wgConns    sync.WaitGroup
-
+	// msgParser RPC相关
 	MsgParser
 }
 
@@ -121,7 +123,8 @@ func (server *TCPServer) run() {
 	for {
 		conn, err := server.ln.Accept()
 		if err != nil {
-			if ne, ok := err.(net.Error); ok && ne.Temporary() {
+			var ne net.Error
+			if errors.As(err, &ne) && ne.Timeout() {
 				if tempDelay == 0 {
 					tempDelay = 5 * time.Millisecond
 				} else {

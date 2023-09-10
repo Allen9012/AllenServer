@@ -1,5 +1,7 @@
 package rpc
 
+import "github.com/Allen9012/AllenGame/network"
+
 /**
   Copyright © 2023 github.com/Allen9012 All rights reserved.
   @author: Allen
