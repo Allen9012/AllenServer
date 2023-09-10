@@ -2,7 +2,9 @@ package service
 
 import (
 	"github.com/Allen9012/AllenGame/concurrent"
+	"github.com/Allen9012/AllenGame/event"
 	"github.com/Allen9012/AllenGame/log"
+	"github.com/Allen9012/AllenGame/profiler"
 	"github.com/Allen9012/AllenGame/rpc"
 	"strconv"
 	"sync"
@@ -104,9 +106,9 @@ func (s *Service) Start() {
 func (s *Service) Run() {
 	defer s.wg.Done()
 	var bStop = false
-
-	concurrent := s.IConcurrent.(*concurrent.Concurrent)
-	concurrentCBChannel := concurrent.GetCallBackChannel()
+	// 拿到并发回调channel
+	concur := s.IConcurrent.(*concurrent.Concurrent)
+	concurrentCBChannel := concur.GetCallBackChannel()
 
 	s.self.(IService).OnStart()
 	for {
@@ -114,9 +116,9 @@ func (s *Service) Run() {
 		select {
 		case <-s.closeSig:
 			bStop = true
-			concurrent.Close()
+			concur.Close()
 		case cb := <-concurrentCBChannel:
-			concurrent.DoCallback(cb)
+			concur.DoCallback(cb)
 		case ev := <-s.chanEvent:
 			switch ev.GetEventType() {
 			case event.ServiceRpcRequestEvent:

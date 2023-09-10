@@ -10,6 +10,17 @@ import "github.com/Allen9012/AllenGame/network"
   @modified by:
 **/
 
+type RpcProcessorType uint8
+
+const (
+	RpcProcessorJson   RpcProcessorType = 0
+	RpcProcessorGoGoPB RpcProcessorType = 1
+)
+
+// var arrayProcessor = []IRpcProcessor{&JsonProcessor{}, &PBProcessor{}}
+var arrayProcessorLen uint8 = 2
+var LittleEndian bool
+
 type Server struct {
 	functions       map[interface{}]interface{}
 	rpcHandleFinder RpcHandleFinder
