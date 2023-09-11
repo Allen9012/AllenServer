@@ -1,11 +1,13 @@
 package service
 
 import (
+	"fmt"
 	"github.com/Allen9012/AllenGame/concurrent"
 	"github.com/Allen9012/AllenGame/event"
 	"github.com/Allen9012/AllenGame/log"
 	"github.com/Allen9012/AllenGame/profiler"
 	"github.com/Allen9012/AllenGame/rpc"
+	"runtime"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -194,6 +196,8 @@ func (s *Service) Run() {
 	}
 }
 
+/*	=====Implement IService=====	 */
+
 func (s *Service) OnSetup(iService IService) {
 	//TODO implement me
 	panic("implement me")
@@ -220,11 +224,6 @@ func (s *Service) SetName(serviceName string) {
 }
 
 func (s *Service) GetName() string {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (s *Service) GetRpcHandler() rpc.IRpcHandler {
 	//TODO implement me
 	panic("implement me")
 }
@@ -257,4 +256,18 @@ func (s *Service) SetEventChannelNum(num int) {
 func (s *Service) OpenProfiler() {
 	//TODO implement me
 	panic("implement me")
+}
+
+// Release 关闭和释放资源
+func (s *Service) Release() {
+	defer func() {
+		if r := recover(); r != nil {
+			buf := make([]byte, 4096)
+			l := runtime.Stack(buf, false)
+			errString := fmt.Sprint(r)
+			log.Dump(string(buf[:l]), log.String("error", errString))
+		}
+	}()
+
+	s.self.OnRelease()
 }

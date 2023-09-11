@@ -17,7 +17,7 @@ const (
 	RpcProcessorGoGoPB RpcProcessorType = 1
 )
 
-// var arrayProcessor = []IRpcProcessor{&JsonProcessor{}, &PBProcessor{}}
+var arrayProcessor = []IRpcProcessor{&JsonProcessor{}, &PBProcessor{}}
 var arrayProcessorLen uint8 = 2
 var LittleEndian bool
 
@@ -32,4 +32,14 @@ type Server struct {
 func (server *Server) Init(rpcHandleFinder RpcHandleFinder) {
 	server.rpcHandleFinder = rpcHandleFinder
 	server.rpcServer = &network.TCPServer{}
+}
+
+func GetProcessorType(param interface{}) (RpcProcessorType, IRpcProcessor) {
+	for i := uint8(1); i < arrayProcessorLen; i++ {
+		if arrayProcessor[i].IsParse(param) == true {
+			return RpcProcessorType(i), arrayProcessor[i]
+		}
+	}
+
+	return RpcProcessorJson, arrayProcessor[RpcProcessorJson]
 }

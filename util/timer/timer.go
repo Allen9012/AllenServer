@@ -27,7 +27,7 @@ type ITimer interface {
 type OnCloseTimer func(timer ITimer)
 type OnAddTimer func(timer ITimer)
 
-// Timer
+// Timer Implement ITimer
 type Timer struct {
 	Id             uint64
 	cancelled      int32         //是否关闭
@@ -101,7 +101,8 @@ func releaseCron(cron *Cron) {
 	cronPool.Put(cron)
 }
 
-// one dispatcher per goroutine (goroutine not safe)
+// Dispatcher one dispatcher per goroutine (goroutine not safe)
+// 用于接收 Timer 结构体的实例，通过该通道进行计时器的调度。
 type Dispatcher struct {
 	ChanTimer chan ITimer
 }
@@ -175,7 +176,7 @@ func (t *Timer) Cancel() {
 	atomic.StoreInt32(&t.cancelled, 1)
 }
 
-// 判断定时器是否已经取消
+// IsActive 判断定时器是否已经取消
 func (t *Timer) IsActive() bool {
 	return atomic.LoadInt32(&t.cancelled) == 0
 }
@@ -191,6 +192,8 @@ func (t *Timer) GetName() string {
 }
 
 var emptyTimer Timer
+
+/*	Implement sync.IPoolData  */
 
 func (t *Timer) Reset() {
 	*t = emptyTimer
@@ -208,8 +211,22 @@ func (t *Timer) UnRef() {
 	t.ref = false
 }
 
+/*	Implement sync.IPoolData  */
+
 func (c *Cron) Reset() {
 	c.Timer.Reset()
+}
+
+func (c *Cron) IsRef() bool {
+	return c.ref
+}
+
+func (c *Cron) Ref() {
+	c.ref = true
+}
+
+func (c *Cron) UnRef() {
+	c.ref = false
 }
 
 func (c *Cron) Do() {
@@ -256,15 +273,21 @@ func (c *Cron) Do() {
 	}
 }
 
-func (c *Cron) IsRef() bool {
+/*	Implement Sync.IPoolData  */
+
+func (c *Ticker) Reset() {
+	c.Timer.Reset()
+}
+
+func (c *Ticker) IsRef() bool {
 	return c.ref
 }
 
-func (c *Cron) Ref() {
+func (c *Ticker) Ref() {
 	c.ref = true
 }
 
-func (c *Cron) UnRef() {
+func (c *Ticker) UnRef() {
 	c.ref = false
 }
 
@@ -304,28 +327,13 @@ func (c *Ticker) Do() {
 	}
 }
 
-func (c *Ticker) Reset() {
-	c.Timer.Reset()
-}
-
-func (c *Ticker) IsRef() bool {
-	return c.ref
-}
-
-func (c *Ticker) Ref() {
-	c.ref = true
-}
-
-func (c *Ticker) UnRef() {
-	c.ref = false
-}
-
 func NewDispatcher(l int) *Dispatcher {
 	dispatcher := new(Dispatcher)
 	dispatcher.ChanTimer = make(chan ITimer, l)
 	return dispatcher
 }
 
+// AfterFunc 创建一个计时器并将其加入调度
 func (dispatcher *Dispatcher) AfterFunc(d time.Duration, cb func(uint64, interface{}), cbEx func(*Timer), onTimerClose OnCloseTimer, onAddTimer OnAddTimer) *Timer {
 	timer := newTimer(d, dispatcher.ChanTimer, nil, nil)
 	timer.cb = cb
@@ -340,6 +348,7 @@ func (dispatcher *Dispatcher) AfterFunc(d time.Duration, cb func(uint64, interfa
 	return timer
 }
 
+// CronFunc 用于创建一个定时任务
 func (dispatcher *Dispatcher) CronFunc(cronExpr *CronExpr, cb func(uint64, interface{}), cbEx func(*Cron), onTimerClose OnCloseTimer, onAddTimer OnAddTimer) *Cron {
 	now := Now()
 	nextTime := cronExpr.Next(now)
@@ -360,6 +369,7 @@ func (dispatcher *Dispatcher) CronFunc(cronExpr *CronExpr, cb func(uint64, inter
 	return cron
 }
 
+// TickerFunc 用于创建一个倒计时任务
 func (dispatcher *Dispatcher) TickerFunc(d time.Duration, cb func(uint64, interface{}), cbEx func(*Ticker), onTimerClose OnCloseTimer, onAddTimer OnAddTimer) *Ticker {
 	ticker := newTicker()
 	ticker.C = dispatcher.ChanTimer

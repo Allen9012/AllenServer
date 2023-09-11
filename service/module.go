@@ -63,3 +63,77 @@ type Module struct {
 	eventHandler event.IEventHandler
 	concurrent.IConcurrent
 }
+
+func (m *Module) SetModuleId(moduleId uint32) bool {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *Module) GetModuleId() uint32 {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *Module) AddModule(module IModule) (uint32, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *Module) GetModule(moduleId uint32) IModule {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *Module) GetAncestor() IModule {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *Module) ReleaseModule(moduleId uint32) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *Module) NewModuleId() uint32 {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *Module) GetParent() IModule {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *Module) OnInit() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+// OnRelease 释放和关闭service需要释放Module
+func (m *Module) OnRelease() {
+}
+
+func (m *Module) getBaseModule() IModule {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *Module) GetService() IService {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *Module) GetModuleName() string {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *Module) GetEventProcessor() event.IEventProcessor {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *Module) NotifyEvent(ev event.IEvent) {
+	//TODO implement me
+	panic("implement me")
+}
