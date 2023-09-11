@@ -7,6 +7,7 @@ import (
 	"github.com/Allen9012/AllenGame/log"
 	"github.com/Allen9012/AllenGame/profiler"
 	"github.com/Allen9012/AllenGame/rpc"
+	"github.com/Allen9012/AllenGame/util/timer"
 	"runtime"
 	"strconv"
 	"sync"
@@ -78,8 +79,26 @@ type DiscoveryServiceEvent struct {
 }
 
 func (s *Service) Init(iService IService, getClientFun interface{}, getServerFun interface{}, serviceCfg interface{}) {
-	//TODO implement me
-	panic("implement me")
+	s.closeSig = make(chan struct{})
+	s.dispatcher = timer.NewDispatcher(timerDispatcherLen)
+	if s.chanEvent == nil {
+		s.chanEvent = make(chan event.IEvent, maxServiceEventChannelNum)
+	}
+
+	s.rpcHandler.InitRpcHandler(iService.(rpc.IRpcHandler), getClientFun, getServerFun, iService.(rpc.IRpcHandlerChannel))
+	s.IRpcHandler = &s.rpcHandler
+	s.self = iService.(IModule)
+	//初始化祖先
+	s.ancestor = iService.(IModule)
+	s.seedModuleId = InitModuleId
+	s.descendants = map[uint32]IModule{}
+	s.serviceCfg = serviceCfg
+	s.goroutineNum = 1
+	s.eventProcessor = event.NewEventProcessor()
+	s.eventProcessor.Init(s)
+	s.eventHandler = event.NewEventHandler()
+	s.eventHandler.Init(s.eventProcessor)
+	s.Module.IConcurrent = &concurrent.Concurrent{}
 }
 
 func (s *Service) Stop() {

@@ -1,8 +1,10 @@
 package cluster
 
 import (
+	"fmt"
+	"github.com/Allen9012/AllenGame/rpc"
 	"github.com/Allen9012/AllenGame/service"
-	"net/rpc"
+	"strings"
 	"sync"
 )
 
@@ -104,4 +106,43 @@ func (cls *Cluster) GetLocalNodeInfo() *NodeInfo {
 
 func (cls *Cluster) Start() {
 	cls.rpcServer.Start(cls.localNodeInfo.ListenAddr, cls.localNodeInfo.MaxRpcParamLen, cls.localNodeInfo.CompressBytesLen)
+}
+
+func GetRpcClient(nodeId int, serviceMethod string, clientList []*rpc.Client) (error, int) {
+	if nodeId > 0 {
+		pClient := GetCluster().GetRpcClient(nodeId)
+		if pClient == nil {
+			return fmt.Errorf("cannot find  nodeid %d!", nodeId), 0
+		}
+		clientList[0] = pClient
+		return nil, 1
+	}
+
+	findIndex := strings.Index(serviceMethod, ".")
+	if findIndex == -1 {
+		return fmt.Errorf("servicemethod param  %s is error!", serviceMethod), 0
+	}
+	serviceName := serviceMethod[:findIndex]
+
+	//1.找到对应的rpcNodeid
+	return GetCluster().GetNodeIdByService(serviceName, clientList, true)
+}
+
+func GetRpcServer() *rpc.Server {
+	return &cluster.rpcServer
+}
+
+func (cls *Cluster) getRpcClient(nodeId int) *rpc.Client {
+	c, ok := cls.mapRpc[nodeId]
+	if ok == false {
+		return nil
+	}
+
+	return c.client
+}
+
+func (cls *Cluster) GetRpcClient(nodeId int) *rpc.Client {
+	cls.locker.RLock()
+	defer cls.locker.RUnlock()
+	return cls.getRpcClient(nodeId)
 }

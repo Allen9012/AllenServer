@@ -75,20 +75,24 @@ type IRpcHandler interface {
 	HandlerRpcRequest(request *RpcRequest)
 	HandlerRpcResponseCB(call *Call)
 	CallMethod(client *Client, ServiceMethod string, param interface{}, callBack reflect.Value, reply interface{}) error
-
+	// 同步等待调用结果
 	Call(serviceMethod string, args interface{}, reply interface{}) error
 	CallNode(nodeId int, serviceMethod string, args interface{}, reply interface{}) error
+	// 异步, rpc首选, 不会阻塞本服务
 	AsyncCall(serviceMethod string, args interface{}, callback interface{}) error
+	// 在明确节点时调用,可以稍微减少开销;  Service名相同时, 避免广播
 	AsyncCallNode(nodeId int, serviceMethod string, args interface{}, callback interface{}) error
 
 	CallWithTimeout(timeout time.Duration, serviceMethod string, args interface{}, reply interface{}) error
 	CallNodeWithTimeout(timeout time.Duration, nodeId int, serviceMethod string, args interface{}, reply interface{}) error
 	AsyncCallWithTimeout(timeout time.Duration, serviceMethod string, args interface{}, callback interface{}) (CancelRpc, error)
 	AsyncCallNodeWithTimeout(timeout time.Duration, nodeId int, serviceMethod string, args interface{}, callback interface{}) (CancelRpc, error)
-
+	// 无结果,不阻塞
 	Go(serviceMethod string, args interface{}) error
 	GoNode(nodeId int, serviceMethod string, args interface{}) error
+	// 原数据,减少参数/结果的序列化和反序列化, 大量转发时使用.
 	RawGoNode(rpcProcessorType RpcProcessorType, nodeId int, rpcMethodId uint32, serviceName string, rawArgs []byte) error
+	// 广播
 	CastGo(serviceMethod string, args interface{}) error
 	IsSingleCoroutine() bool
 	UnmarshalInParam(rpcProcessor IRpcProcessor, serviceMethod string, rawRpcMethodId uint32, inParam []byte) (interface{}, error)

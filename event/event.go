@@ -47,6 +47,7 @@ func (e *Event) GetEventType() EventType {
 	return e.Type
 }
 
+// IEventHandler 事件Handler
 type IEventHandler interface {
 	Init(processor IEventProcessor)
 	GetEventProcessor() IEventProcessor //获得事件
@@ -61,6 +62,7 @@ type IEventChannel interface {
 	PushEvent(ev IEvent) error
 }
 
+// IEventProcessor 事件处理程序
 type IEventProcessor interface {
 	IEventChannel
 
@@ -76,6 +78,7 @@ type IEventProcessor interface {
 	removeListen(eventType EventType, receiver IEventHandler)
 }
 
+/*	Implement IEventHandler  */
 type EventHandler struct {
 	//已经注册的事件类型
 	eventProcessor IEventProcessor
@@ -85,12 +88,13 @@ type EventHandler struct {
 	mapRegEvent map[EventType]map[IEventProcessor]interface{} //向其他事件处理器监听的事件类型
 }
 
+/*	Implement IEventProcessor  */
 type EventProcessor struct {
 	IEventChannel
 
 	locker              sync.RWMutex
 	mapListenerEvent    map[EventType]map[IEventProcessor]int         //监听者信息
-	mapBindHandlerEvent map[EventType]map[IEventHandler]EventCallBack //收到事件处理
+	mapBindHandlerEvent map[EventType]map[IEventHandler]EventCallBack //收到事件处理和回调的map
 }
 
 /*	=====Implement IEventProcessor=====  */
@@ -170,4 +174,12 @@ func (e *EventHandler) addRegInfo(eventType EventType, eventProcessor IEventProc
 func (e *EventHandler) removeRegInfo(eventType EventType, eventProcessor IEventProcessor) {
 	//TODO implement me
 	panic("implement me")
+}
+
+func NewEventProcessor() IEventProcessor {
+	ep := EventProcessor{}
+	ep.mapListenerEvent = map[EventType]map[IEventProcessor]int{}
+	ep.mapBindHandlerEvent = map[EventType]map[IEventHandler]EventCallBack{}
+
+	return &ep
 }

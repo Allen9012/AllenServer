@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Allen9012/AllenGame/log"
+	"github.com/Allen9012/AllenGame/rpc"
 	"os"
 	"path/filepath"
 	"strings"
@@ -269,4 +270,38 @@ func (cls *Cluster) checkDiscoveryNodeList(discoverMasterNode []NodeInfo) bool {
 	}
 
 	return true
+}
+
+func (cls *Cluster) IsConfigService(serviceName string) bool {
+	cls.locker.RLock()
+	defer cls.locker.RUnlock()
+	mapNode, ok := cls.mapServiceNode[serviceName]
+	if ok == false {
+		return false
+	}
+
+	_, ok = mapNode[cls.localNodeInfo.NodeId]
+	return ok
+}
+
+func (cls *Cluster) GetNodeIdByService(serviceName string, rpcClientList []*rpc.Client, bAll bool) (error, int) {
+	cls.locker.RLock()
+	defer cls.locker.RUnlock()
+	mapNodeId, ok := cls.mapServiceNode[serviceName]
+	count := 0
+	if ok == true {
+		for nodeId, _ := range mapNodeId {
+			pClient := GetCluster().getRpcClient(nodeId)
+			if pClient == nil || (bAll == false && pClient.IsConnected() == false) {
+				continue
+			}
+			rpcClientList[count] = pClient
+			count++
+			if count >= cap(rpcClientList) {
+				break
+			}
+		}
+	}
+
+	return nil, count
 }
