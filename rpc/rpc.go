@@ -36,6 +36,7 @@ func (r *Responder) IsInvalid() bool {
 	return reflect.ValueOf(*r).Pointer() == reflect.ValueOf(reqHandlerNull).Pointer()
 }
 
+/*	Implement sync.IPoolData*/
 var rpcRequestPool = sync.NewPoolEx(make(chan sync.IPoolData, 10240), func() sync.IPoolData {
 	return &RpcRequest{}
 })
@@ -85,44 +86,98 @@ type RpcCancel struct {
 
 /*	RpcRequest Implement sync.IPoolData */
 
-func (r *RpcRequest) Reset() {
-	//TODO implement me
-	panic("implement me")
+func (slf *RpcRequest) Reset() {
+	slf.Clear()
 }
 
-func (r *RpcRequest) IsRef() bool {
-	//TODO implement me
-	panic("implement me")
+func (slf *RpcRequest) IsRef() bool {
+	return slf.ref
 }
 
-func (r *RpcRequest) Ref() {
-	//TODO implement me
-	panic("implement me")
+func (slf *RpcRequest) Ref() {
+	slf.ref = true
 }
 
-func (r *RpcRequest) UnRef() {
-	//TODO implement me
-	panic("implement me")
+func (slf *RpcRequest) UnRef() {
+	slf.ref = false
+}
+
+func (slf *RpcRequest) Clear() *RpcRequest {
+	slf.RpcRequestData = nil
+	slf.localReply = nil
+	slf.inParam = nil
+	slf.requestHandle = nil
+	slf.callback = nil
+	slf.rpcProcessor = nil
+	return slf
 }
 
 /*	Call Implement sync.IPoolData */
 
-func (c *Call) Reset() {
-	//TODO implement me
-	panic("implement me")
+func (call *Call) Reset() {
+	call.Clear()
 }
 
-func (c *Call) IsRef() bool {
-	//TODO implement me
-	panic("implement me")
+func (call *Call) IsRef() bool {
+	return call.ref
 }
 
-func (c *Call) Ref() {
-	//TODO implement me
-	panic("implement me")
+func (call *Call) Ref() {
+	call.ref = true
 }
 
-func (c *Call) UnRef() {
-	//TODO implement me
-	panic("implement me")
+func (call *Call) UnRef() {
+	call.ref = false
+}
+
+func (call *Call) Clear() *Call {
+	call.Seq = 0
+	call.ServiceMethod = ""
+	call.Reply = nil
+	call.Response = nil
+	if len(call.done) > 0 {
+		call.done = make(chan *Call, 1)
+	}
+
+	call.Err = nil
+	call.connId = 0
+	call.callback = nil
+	call.rpcHandler = nil
+	call.TimeOut = 0
+
+	return call
+}
+
+func (call *Call) DoError(err error) {
+	call.Err = err
+	call.done <- call
+}
+
+func (call *Call) DoOK() {
+	call.done <- call
+}
+
+func (call *Call) Done() *Call {
+	return <-call.done
+}
+
+func MakeRpcRequest(rpcProcessor IRpcProcessor, seq uint64, rpcMethodId uint32, serviceMethod string, noReply bool, inParam []byte) *RpcRequest {
+	rpcRequest := rpcRequestPool.Get().(*RpcRequest)
+	rpcRequest.rpcProcessor = rpcProcessor
+	rpcRequest.RpcRequestData = rpcRequest.rpcProcessor.MakeRpcRequest(seq, rpcMethodId, serviceMethod, noReply, inParam)
+
+	return rpcRequest
+}
+
+func ReleaseRpcRequest(rpcRequest *RpcRequest) {
+	rpcRequest.rpcProcessor.ReleaseRpcRequest(rpcRequest.RpcRequestData)
+	rpcRequestPool.Put(rpcRequest)
+}
+
+func MakeCall() *Call {
+	return rpcCallPool.Get().(*Call)
+}
+
+func ReleaseCall(call *Call) {
+	rpcCallPool.Put(call)
 }

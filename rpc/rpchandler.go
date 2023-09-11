@@ -22,6 +22,26 @@ const maxClusterNode int = 128
 type FuncRpcClient func(nodeId int, serviceMethod string, client []*Client) (error, int)
 type FuncRpcServer func() *Server
 
+/*	定义RPC Error相关	Implement error */
+var nilError = reflect.Zero(reflect.TypeOf((*error)(nil)).Elem())
+
+type RpcError string
+
+var NilError RpcError
+
+func (e RpcError) Error() string {
+	return string(e)
+}
+
+func ConvertError(e error) RpcError {
+	if e == nil {
+		return NilError
+	}
+
+	rpcErr := RpcError(e.Error())
+	return rpcErr
+}
+
 type RpcMethodInfo struct {
 	method           reflect.Method
 	inParamValue     reflect.Value
@@ -92,26 +112,6 @@ type RpcHandler struct {
 type INodeListener interface {
 	OnNodeConnected(nodeId int)
 	OnNodeDisconnect(nodeId int)
-}
-
-/*	定义RPC Error相关	 */
-var nilError = reflect.Zero(reflect.TypeOf((*error)(nil)).Elem())
-
-type RpcError string
-
-var NilError RpcError
-
-func (e RpcError) Error() string {
-	return string(e)
-}
-
-func ConvertError(e error) RpcError {
-	if e == nil {
-		return NilError
-	}
-
-	rpcErr := RpcError(e.Error())
-	return rpcErr
 }
 
 func reqHandlerNull(Returns interface{}, Err RpcError) {

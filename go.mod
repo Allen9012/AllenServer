@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/json-iterator/go v1.1.12
+	github.com/pierrec/lz4/v4 v4.1.18
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
 	google.golang.org/protobuf v1.31.0
 )

@@ -3,6 +3,7 @@ package rpc
 import (
 	"github.com/Allen9012/AllenGame/util/sync"
 	jsoniter "github.com/json-iterator/go"
+	"reflect"
 )
 
 /**
@@ -48,48 +49,103 @@ var rpcJsonRequestDataPool = sync.NewPool(make(chan interface{}, 10240), func() 
 })
 
 /*	Implement IRpcProcessor	 */
-
 func (jsonProcessor *JsonProcessor) Clone(src interface{}) (interface{}, error) {
-	//TODO implement me
-	panic("implement me")
+	dstValue := reflect.New(reflect.ValueOf(src).Type().Elem())
+	bytes, err := json.Marshal(src)
+	if err != nil {
+		return nil, err
+	}
+
+	dst := dstValue.Interface()
+	err = json.Unmarshal(bytes, dst)
+	if err != nil {
+		return nil, err
+	}
+
+	return dst, nil
 }
 
 func (jsonProcessor *JsonProcessor) Marshal(v interface{}) ([]byte, error) {
-	//TODO implement me
-	panic("implement me")
+	return json.Marshal(v)
 }
 
 func (jsonProcessor *JsonProcessor) Unmarshal(data []byte, v interface{}) error {
-	//TODO implement me
-	panic("implement me")
+	return json.Unmarshal(data, v)
 }
 
 func (jsonProcessor *JsonProcessor) MakeRpcRequest(seq uint64, rpcMethodId uint32, serviceMethod string, noReply bool, inParam []byte) IRpcRequestData {
-	//TODO implement me
-	panic("implement me")
+	jsonRpcRequestData := rpcJsonRequestDataPool.Get().(*JsonRpcRequestData)
+	jsonRpcRequestData.Seq = seq
+	jsonRpcRequestData.rpcMethodId = rpcMethodId
+	jsonRpcRequestData.ServiceMethod = serviceMethod
+	jsonRpcRequestData.NoReply = noReply
+	jsonRpcRequestData.InParam = inParam
+	return jsonRpcRequestData
 }
 
 func (jsonProcessor *JsonProcessor) MakeRpcResponse(seq uint64, err RpcError, reply []byte) IRpcResponseData {
-	//TODO implement me
-	panic("implement me")
+	jsonRpcResponseData := rpcJsonResponseDataPool.Get().(*JsonRpcResponseData)
+	jsonRpcResponseData.Seq = seq
+	jsonRpcResponseData.Err = err.Error()
+	jsonRpcResponseData.Reply = reply
+
+	return jsonRpcResponseData
 }
 
 func (jsonProcessor *JsonProcessor) ReleaseRpcRequest(rpcRequestData IRpcRequestData) {
-	//TODO implement me
-	panic("implement me")
+	rpcJsonRequestDataPool.Put(rpcRequestData)
 }
 
-func (jsonProcessor *JsonProcessor) ReleaseRpcResponse(rpcRequestData IRpcResponseData) {
-	//TODO implement me
-	panic("implement me")
+func (jsonProcessor *JsonProcessor) ReleaseRpcResponse(rpcResponseData IRpcResponseData) {
+	rpcJsonResponseDataPool.Put(rpcResponseData)
 }
 
 func (jsonProcessor *JsonProcessor) IsParse(param interface{}) bool {
-	//TODO implement me
-	panic("implement me")
+	_, err := json.Marshal(param)
+	return err == nil
 }
 
 func (jsonProcessor *JsonProcessor) GetProcessorType() RpcProcessorType {
-	//TODO implement me
-	panic("implement me")
+	return RpcProcessorJson
+}
+
+/*	Implement IRpcRequestData	*/
+
+func (jsonRpcRequestData *JsonRpcRequestData) IsNoReply() bool {
+	return jsonRpcRequestData.NoReply
+}
+
+func (jsonRpcRequestData *JsonRpcRequestData) GetSeq() uint64 {
+	return jsonRpcRequestData.Seq
+}
+
+func (jsonRpcRequestData *JsonRpcRequestData) GetRpcMethodId() uint32 {
+	return jsonRpcRequestData.rpcMethodId
+}
+
+func (jsonRpcRequestData *JsonRpcRequestData) GetServiceMethod() string {
+	return jsonRpcRequestData.ServiceMethod
+}
+
+func (jsonRpcRequestData *JsonRpcRequestData) GetInParam() []byte {
+	return jsonRpcRequestData.InParam
+}
+
+/*	Implement IRpcResponseData	*/
+
+func (jsonRpcResponseData *JsonRpcResponseData) GetSeq() uint64 {
+	return jsonRpcResponseData.Seq
+}
+
+func (jsonRpcResponseData *JsonRpcResponseData) GetErr() *RpcError {
+	if jsonRpcResponseData.Err == "" {
+		return nil
+	}
+
+	err := RpcError(jsonRpcResponseData.Err)
+	return &err
+}
+
+func (jsonRpcResponseData *JsonRpcResponseData) GetReply() []byte {
+	return jsonRpcResponseData.Reply
 }

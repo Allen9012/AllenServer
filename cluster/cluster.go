@@ -101,3 +101,7 @@ func SetConfigDir(cfgDir string) {
 func (cls *Cluster) GetLocalNodeInfo() *NodeInfo {
 	return &cls.localNodeInfo
 }
+
+func (cls *Cluster) Start() {
+	cls.rpcServer.Start(cls.localNodeInfo.ListenAddr, cls.localNodeInfo.MaxRpcParamLen, cls.localNodeInfo.CompressBytesLen)
+}
