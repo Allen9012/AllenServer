@@ -27,6 +27,39 @@ var rpcPbRequestDataPool = sync.NewPool(make(chan interface{}, 10240), func() in
 	return &PBRpcRequestData{}
 })
 
+/*	Implement IRpcRequestData	 */
+func (slf *PBRpcRequestData) IsNoReply() bool {
+	return slf.GetNoReply()
+}
+
+func (slf *PBRpcRequestData) MakeRequest(seq uint64, rpcMethodId uint32, serviceMethod string, noReply bool, inParam []byte) *PBRpcRequestData {
+	slf.Seq = seq
+	slf.RpcMethodId = rpcMethodId
+	slf.ServiceMethod = serviceMethod
+	slf.NoReply = noReply
+	slf.InParam = inParam
+
+	return slf
+}
+
+/*  Implement IRpcResponseData	*/
+func (slf *PBRpcResponseData) GetErr() *RpcError {
+	if slf.GetError() == "" {
+		return nil
+	}
+
+	err := RpcError(slf.GetError())
+	return &err
+}
+
+func (slf *PBRpcResponseData) MakeResponse(seq uint64, err RpcError, reply []byte) *PBRpcResponseData {
+	slf.Seq = seq
+	slf.Error = err.Error()
+	slf.Reply = reply
+
+	return slf
+}
+
 /*	Implement IRpcProcessor	 */
 
 func (slf *PBProcessor) Marshal(v interface{}) ([]byte, error) {
@@ -77,37 +110,4 @@ func (slf *PBProcessor) Clone(src interface{}) (interface{}, error) {
 	}
 
 	return proto.Clone(srcMsg), nil
-}
-
-/*	Implement IRpcRequestData	 */
-func (slf *PBRpcRequestData) IsNoReply() bool {
-	return slf.GetNoReply()
-}
-
-/*  Implement IRpcResponseData	*/
-func (slf *PBRpcResponseData) GetErr() *RpcError {
-	if slf.GetError() == "" {
-		return nil
-	}
-
-	err := RpcError(slf.GetError())
-	return &err
-}
-
-func (slf *PBRpcRequestData) MakeRequest(seq uint64, rpcMethodId uint32, serviceMethod string, noReply bool, inParam []byte) *PBRpcRequestData {
-	slf.Seq = seq
-	slf.RpcMethodId = rpcMethodId
-	slf.ServiceMethod = serviceMethod
-	slf.NoReply = noReply
-	slf.InParam = inParam
-
-	return slf
-}
-
-func (slf *PBRpcResponseData) MakeResponse(seq uint64, err RpcError, reply []byte) *PBRpcResponseData {
-	slf.Seq = seq
-	slf.Error = err.Error()
-	slf.Reply = reply
-
-	return slf
 }

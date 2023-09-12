@@ -5,8 +5,10 @@ import (
 	"github.com/Allen9012/AllenGame/log"
 	"github.com/Allen9012/AllenGame/network"
 	"math"
+	"reflect"
 	"runtime"
 	"strings"
+	"time"
 )
 
 /**
@@ -53,6 +55,8 @@ func (server *Server) Init(rpcHandleFinder RpcHandleFinder) {
 	server.rpcHandleFinder = rpcHandleFinder
 	server.rpcServer = &network.TCPServer{}
 }
+
+const Default_ReadWriteDeadline = 15 * time.Second
 
 func (server *Server) Start(listenAddr string, maxRpcParamLen uint32, compressBytesLen int) {
 	splitAddr := strings.Split(listenAddr, ":")
@@ -203,6 +207,52 @@ func (agent *RpcAgent) Run() {
 func (agent *RpcAgent) OnClose() {
 }
 
+func (agent *RpcAgent) WriteResponse(processor IRpcProcessor, serviceMethod string, seq uint64, reply interface{}, rpcError RpcError) {
+	var mReply []byte
+	var errM error
+
+	if reply != nil {
+		mReply, errM = processor.Marshal(reply)
+		if errM != nil {
+			rpcError = ConvertError(errM)
+		}
+	}
+
+	var rpcResponse RpcResponse
+	rpcResponse.RpcResponseData = processor.MakeRpcResponse(seq, rpcError, mReply)
+	bytes, errM := processor.Marshal(rpcResponse.RpcResponseData)
+	defer processor.ReleaseRpcResponse(rpcResponse.RpcResponseData)
+
+	if errM != nil {
+		log.Error("mashal RpcResponseData failed", log.String("serviceMethod", serviceMethod), log.ErrorAttr("error", errM))
+		return
+	}
+
+	var compressBuff []byte
+	bCompress := uint8(0)
+	if agent.rpcServer.compressBytesLen > 0 && len(bytes) >= agent.rpcServer.compressBytesLen {
+		var cErr error
+
+		compressBuff, cErr = compressor.CompressBlock(bytes)
+		if cErr != nil {
+			log.Error("CompressBlock failed", log.String("serviceMethod", serviceMethod), log.ErrorAttr("error", cErr))
+			return
+		}
+		if len(compressBuff) < len(bytes) {
+			bytes = compressBuff
+			bCompress = 1 << 7
+		}
+	}
+
+	errM = agent.conn.WriteMsg([]byte{uint8(processor.GetProcessorType()) | bCompress}, bytes)
+	if cap(compressBuff) > 0 {
+		compressor.CompressBufferCollection(compressBuff)
+	}
+	if errM != nil {
+		log.Error("WriteMsg error,Rpc return is fail", log.String("serviceMethod", serviceMethod), log.ErrorAttr("error", errM))
+	}
+}
+
 func GetProcessorType(param interface{}) (RpcProcessorType, IRpcProcessor) {
 	for i := uint8(1); i < arrayProcessorLen; i++ {
 		if arrayProcessor[i].IsParse(param) == true {
@@ -218,4 +268,25 @@ func GetProcessor(processorType uint8) IRpcProcessor {
 		return nil
 	}
 	return arrayProcessor[processorType]
+}
+
+func (server *Server) myselfRpcHandlerGo(client *Client, handlerName string, serviceMethod string, args interface{}, callBack reflect.Value, reply interface{}) error {
+	rpcHandler := server.rpcHandleFinder.FindRpcHandler(handlerName)
+	if rpcHandler == nil {
+		err := errors.New("service method " + serviceMethod + " not config!")
+		log.Error("service method not config", log.String("serviceMethod", serviceMethod))
+		return err
+	}
+
+	return rpcHandler.CallMethod(client, serviceMethod, args, callBack, reply)
+}
+
+func (server *Server) selfNodeRpcHandlerGo(timeout time.Duration, processor IRpcProcessor, client *Client, b bool, name string, id uint32, name2 string, t interface{}, t2 interface{}, args []byte) *Call {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (server *Server) selfNodeRpcHandlerAsyncGo(timeout time.Duration, client *Client, handler IRpcHandler, b bool, name string, method string, args interface{}, reply interface{}, callback reflect.Value, cancelable bool) (CancelRpc, error) {
+	//TODO implement me
+	panic("implement me")
 }

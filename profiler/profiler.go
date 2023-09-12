@@ -70,6 +70,16 @@ func init() {
 	mapProfiler = map[string]*Profiler{}
 }
 
+func RegProfiler(profilerName string) *Profiler {
+	if _, ok := mapProfiler[profilerName]; ok == true {
+		return nil
+	}
+
+	pProfiler := &Profiler{stack: list.New(), record: list.New(), maxOverTime: DefaultMaxOvertime, overTime: DefaultOvertime}
+	mapProfiler[profilerName] = pProfiler
+	return pProfiler
+}
+
 /* 设置字段 */
 
 func (slf *Profiler) SetMaxOverTime(tm time.Duration) {
@@ -143,6 +153,32 @@ func DefaultReportFunction(name string, callNum int, costTime time.Duration, rec
 }
 
 func Report() {
-	//TODO implement me
-	panic("implement me")
+	var record *list.List
+	for name, prof := range mapProfiler {
+		prof.stackLocker.RLock()
+
+		//取栈顶，是否存在异常MaxOverTime数据
+		pElem := prof.stack.Back()
+		for pElem != nil {
+			pElement := pElem.Value.(*Element)
+			pExceptionElem, _ := prof.check(pElement)
+			if pExceptionElem != nil {
+				prof.pushRecordLog(pExceptionElem)
+			}
+			pElem = pElem.Prev()
+		}
+
+		if prof.record.Len() == 0 {
+			prof.stackLocker.RUnlock()
+			continue
+		}
+
+		record = prof.record
+		prof.record = list.New()
+		callNum := prof.callNum
+		totalCostTime := prof.totalCostTime
+		prof.stackLocker.RUnlock()
+
+		DefaultReportFunction(name, callNum, totalCostTime, record)
+	}
 }

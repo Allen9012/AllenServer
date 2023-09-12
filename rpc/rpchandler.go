@@ -112,6 +112,8 @@ type RpcHandler struct {
 	pClientList []*Client
 }
 
+type TriggerRpcConnEvent func(bConnect bool, clientSeq uint32, nodeId int)
+
 // INodeListener 定义节点监听接口
 type INodeListener interface {
 	OnNodeConnected(nodeId int)

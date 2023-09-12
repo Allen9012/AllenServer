@@ -48,6 +48,47 @@ var rpcJsonRequestDataPool = sync.NewPool(make(chan interface{}, 10240), func() 
 	return &JsonRpcRequestData{}
 })
 
+/*	Implement IRpcResponseData	*/
+
+func (jsonRpcResponseData *JsonRpcResponseData) GetSeq() uint64 {
+	return jsonRpcResponseData.Seq
+}
+
+func (jsonRpcResponseData *JsonRpcResponseData) GetErr() *RpcError {
+	if jsonRpcResponseData.Err == "" {
+		return nil
+	}
+
+	err := RpcError(jsonRpcResponseData.Err)
+	return &err
+}
+
+func (jsonRpcResponseData *JsonRpcResponseData) GetReply() []byte {
+	return jsonRpcResponseData.Reply
+}
+
+/*	Implement IRpcRequestData	*/
+
+func (jsonRpcRequestData *JsonRpcRequestData) IsNoReply() bool {
+	return jsonRpcRequestData.NoReply
+}
+
+func (jsonRpcRequestData *JsonRpcRequestData) GetSeq() uint64 {
+	return jsonRpcRequestData.Seq
+}
+
+func (jsonRpcRequestData *JsonRpcRequestData) GetRpcMethodId() uint32 {
+	return jsonRpcRequestData.rpcMethodId
+}
+
+func (jsonRpcRequestData *JsonRpcRequestData) GetServiceMethod() string {
+	return jsonRpcRequestData.ServiceMethod
+}
+
+func (jsonRpcRequestData *JsonRpcRequestData) GetInParam() []byte {
+	return jsonRpcRequestData.InParam
+}
+
 /*	Implement IRpcProcessor	 */
 func (jsonProcessor *JsonProcessor) Clone(src interface{}) (interface{}, error) {
 	dstValue := reflect.New(reflect.ValueOf(src).Type().Elem())
@@ -107,45 +148,4 @@ func (jsonProcessor *JsonProcessor) IsParse(param interface{}) bool {
 
 func (jsonProcessor *JsonProcessor) GetProcessorType() RpcProcessorType {
 	return RpcProcessorJson
-}
-
-/*	Implement IRpcRequestData	*/
-
-func (jsonRpcRequestData *JsonRpcRequestData) IsNoReply() bool {
-	return jsonRpcRequestData.NoReply
-}
-
-func (jsonRpcRequestData *JsonRpcRequestData) GetSeq() uint64 {
-	return jsonRpcRequestData.Seq
-}
-
-func (jsonRpcRequestData *JsonRpcRequestData) GetRpcMethodId() uint32 {
-	return jsonRpcRequestData.rpcMethodId
-}
-
-func (jsonRpcRequestData *JsonRpcRequestData) GetServiceMethod() string {
-	return jsonRpcRequestData.ServiceMethod
-}
-
-func (jsonRpcRequestData *JsonRpcRequestData) GetInParam() []byte {
-	return jsonRpcRequestData.InParam
-}
-
-/*	Implement IRpcResponseData	*/
-
-func (jsonRpcResponseData *JsonRpcResponseData) GetSeq() uint64 {
-	return jsonRpcResponseData.Seq
-}
-
-func (jsonRpcResponseData *JsonRpcResponseData) GetErr() *RpcError {
-	if jsonRpcResponseData.Err == "" {
-		return nil
-	}
-
-	err := RpcError(jsonRpcResponseData.Err)
-	return &err
-}
-
-func (jsonRpcResponseData *JsonRpcResponseData) GetReply() []byte {
-	return jsonRpcResponseData.Reply
 }

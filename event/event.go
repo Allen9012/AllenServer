@@ -97,7 +97,22 @@ type EventProcessor struct {
 	mapBindHandlerEvent map[EventType]map[IEventHandler]EventCallBack //收到事件处理和回调的map
 }
 
-/*	=====Implement IEventProcessor=====  */
+func NewEventHandler() IEventHandler {
+	eh := EventHandler{}
+	eh.mapRegEvent = map[EventType]map[IEventProcessor]interface{}{}
+
+	return &eh
+}
+
+func NewEventProcessor() IEventProcessor {
+	ep := EventProcessor{}
+	ep.mapListenerEvent = map[EventType]map[IEventProcessor]int{}
+	ep.mapBindHandlerEvent = map[EventType]map[IEventHandler]EventCallBack{}
+
+	return &ep
+}
+
+/*	=====EventProcessor Implement IEventProcessor=====  */
 
 func (e *EventProcessor) Init(eventChannel IEventChannel) {
 	//TODO implement me
@@ -144,7 +159,7 @@ func (e *EventProcessor) removeListen(eventType EventType, receiver IEventHandle
 	panic("implement me")
 }
 
-/*	=====Implement IEventHandler===== */
+/*	=====EventHandler Implement IEventHandler===== */
 
 func (e *EventHandler) Init(processor IEventProcessor) {
 	//TODO implement me
@@ -174,12 +189,4 @@ func (e *EventHandler) addRegInfo(eventType EventType, eventProcessor IEventProc
 func (e *EventHandler) removeRegInfo(eventType EventType, eventProcessor IEventProcessor) {
 	//TODO implement me
 	panic("implement me")
-}
-
-func NewEventProcessor() IEventProcessor {
-	ep := EventProcessor{}
-	ep.mapListenerEvent = map[EventType]map[IEventProcessor]int{}
-	ep.mapBindHandlerEvent = map[EventType]map[IEventHandler]EventCallBack{}
-
-	return &ep
 }

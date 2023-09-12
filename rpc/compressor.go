@@ -8,6 +8,14 @@ import (
 	"runtime"
 )
 
+/**
+  Copyright © 2023 github.com/Allen9012 All rights reserved.
+  @author: Allen
+  @since: 2023/9/8
+  @desc: 压缩器
+  @modified by:
+**/
+
 var memPool bytespool.IBytesMempool = bytespool.NewMemAreaPool()
 
 type ICompressor interface {

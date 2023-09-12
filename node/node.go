@@ -6,6 +6,7 @@ import (
 	"github.com/Allen9012/AllenGame/cluster"
 	"github.com/Allen9012/AllenGame/console"
 	"github.com/Allen9012/AllenGame/log"
+	"github.com/Allen9012/AllenGame/profiler"
 	"github.com/Allen9012/AllenGame/service"
 	"github.com/Allen9012/AllenGame/util/buildtime"
 	"github.com/Allen9012/AllenGame/util/timer"
@@ -355,5 +356,22 @@ func Setup(s ...service.IService) {
 	for _, sv := range s {
 		sv.OnSetup(sv)
 		preSetupService = append(preSetupService, sv)
+	}
+}
+
+// 记录进程id号
+func writeProcessPid(nodeId int) {
+	//pid
+	f, err := os.OpenFile(fmt.Sprintf("%s_%d.pid", os.Args[0], nodeId), os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0600)
+	defer f.Close()
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(-1)
+	} else {
+		_, err = f.Write([]byte(fmt.Sprintf("%d", os.Getpid())))
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(-1)
+		}
 	}
 }

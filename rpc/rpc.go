@@ -181,3 +181,9 @@ func MakeCall() *Call {
 func ReleaseCall(call *Call) {
 	rpcCallPool.Put(call)
 }
+
+/*	RpcCancel function  */
+
+func (rc *RpcCancel) CancelRpc() {
+	rc.Cli.RemovePending(rc.CallSeq)
+}

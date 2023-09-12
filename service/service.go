@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 	"github.com/Allen9012/AllenGame/concurrent"
 	"github.com/Allen9012/AllenGame/event"
@@ -78,7 +79,9 @@ type DiscoveryServiceEvent struct {
 	NodeId      int
 }
 
-func (s *Service) Init(iService IService, getClientFun interface{}, getServerFun interface{}, serviceCfg interface{}) {
+/*	Service Implement IService */
+
+func (s *Service) Init(iService IService, getClientFun rpc.FuncRpcClient, getServerFun rpc.FuncRpcServer, serviceCfg interface{}) {
 	s.closeSig = make(chan struct{})
 	s.dispatcher = timer.NewDispatcher(timerDispatcherLen)
 	if s.chanEvent == nil {
@@ -102,8 +105,10 @@ func (s *Service) Init(iService IService, getClientFun interface{}, getServerFun
 }
 
 func (s *Service) Stop() {
-	//TODO implement me
-	panic("implement me")
+	log.Info("stop " + s.GetName() + " service ")
+	close(s.closeSig)
+	s.wg.Wait()
+	log.Info(s.GetName() + " service has been stopped")
 }
 
 func (s *Service) Start() {
@@ -252,7 +257,7 @@ func (s *Service) GetServiceCfg() interface{} {
 	panic("implement me")
 }
 
-func (s *Service) GetProfiler() *interface{} {
+func (s *Service) GetProfiler() *profiler.Profiler {
 	//TODO implement me
 	panic("implement me")
 }
@@ -273,8 +278,10 @@ func (s *Service) SetEventChannelNum(num int) {
 }
 
 func (s *Service) OpenProfiler() {
-	//TODO implement me
-	panic("implement me")
+	s.profiler = profiler.RegProfiler(s.GetName())
+	if s.profiler == nil {
+		log.Fatal("rofiler.RegProfiler " + s.GetName() + " fail.")
+	}
 }
 
 // Release 关闭和释放资源
@@ -289,4 +296,62 @@ func (s *Service) Release() {
 	}()
 
 	s.self.OnRelease()
+}
+
+/*	Service Implement IRpcHandlerChannel */
+func (s *Service) PushRpcRequest(rpcRequest *rpc.RpcRequest) error {
+	ev := event.NewEvent()
+	ev.Type = event.ServiceRpcRequestEvent
+	ev.Data = rpcRequest
+
+	return s.pushEvent(ev)
+}
+
+func (s *Service) PushRpcResponse(call *rpc.Call) error {
+	ev := event.NewEvent()
+	ev.Type = event.ServiceRpcResponseEvent
+	ev.Data = call
+
+	return s.pushEvent(ev)
+}
+
+/*	Service Implement IEventChannel	*/
+func (s *Service) PushEvent(ev event.IEvent) error {
+	return s.pushEvent(ev)
+}
+
+func (s *Service) pushEvent(ev event.IEvent) error {
+	if len(s.chanEvent) >= maxServiceEventChannelNum {
+		err := errors.New("The event channel in the service is full")
+		log.Error(err.Error())
+		return err
+	}
+
+	s.chanEvent <- ev
+	return nil
+}
+
+func (s *Service) SetGoRoutineNum(goroutineNum int32) bool {
+	//已经开始状态不允许修改协程数量,打开性能分析器不允许开多线程
+	if s.startStatus == true || s.profiler != nil {
+		log.Error("open profiler mode is not allowed to set Multi-coroutine.")
+		return false
+	}
+
+	s.goroutineNum = goroutineNum
+	return true
+}
+
+func SetMaxServiceChannel(maxEventChannel int) {
+	maxServiceEventChannelNum = maxEventChannel
+}
+
+/*	DiscoveryServiceEvent Implement IEvent */
+func (rpcEventData *DiscoveryServiceEvent) GetEventType() event.EventType {
+	return event.Sys_Event_DiscoverService
+}
+
+/*	RpcConnEvent Implement IEvent */
+func (rpcEventData *RpcConnEvent) GetEventType() event.EventType {
+	return event.Sys_Event_Node_Event
 }
