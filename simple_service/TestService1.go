@@ -1,6 +1,7 @@
 package simple_service
 
 import (
+	"fmt"
 	"github.com/Allen9012/AllenGame/node"
 	"github.com/Allen9012/AllenGame/service"
 )
@@ -29,5 +30,9 @@ type TestService1 struct {
 
 // 服务初始化函数，在安装服务时，服务将自动调用OnInit函数
 func (slf *TestService1) OnInit() error {
+	fmt.Printf("TestService1 OnInit.\n")
+
+	//打开多线程处理模式，10个协程并发处理
+	slf.SetGoRoutineNum(10)
 	return nil
 }

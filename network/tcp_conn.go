@@ -141,6 +141,7 @@ func (tcpConn *TCPConn) ReleaseReadMsg(byteBuff []byte) {
 	tcpConn.msgParser.ReleaseBytes(byteBuff)
 }
 
+// WriteMsg 还没有序列化数据
 func (tcpConn *TCPConn) WriteMsg(args ...[]byte) error {
 	if atomic.LoadInt32(&tcpConn.closeFlag) == 1 {
 		return errors.New("conn is close")

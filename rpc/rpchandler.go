@@ -132,8 +132,7 @@ func init() {
 /*	=====Implement IRpcHandler=====*/
 
 func (handler *RpcHandler) GetName() string {
-	//TODO implement me
-	panic("implement me")
+	return handler.rpcHandler.GetName()
 }
 
 func (handler *RpcHandler) InitRpcHandler(rpcHandler IRpcHandler, getClientFun FuncRpcClient, getServerFun FuncRpcServer, rpcHandlerChannel IRpcHandlerChannel) {
@@ -148,8 +147,7 @@ func (handler *RpcHandler) InitRpcHandler(rpcHandler IRpcHandler, getClientFun F
 }
 
 func (handler *RpcHandler) GetRpcHandler() IRpcHandler {
-	//TODO implement me
-	panic("implement me")
+	return handler.rpcHandler
 }
 
 func (handler *RpcHandler) HandlerRpcRequest(request *RpcRequest) {

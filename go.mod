@@ -4,6 +4,10 @@ go 1.20
 
 require (
 	github.com/Allen9012/broker v1.0.2
+	github.com/go-sql-driver/mysql v1.7.1
+	github.com/gomodule/redigo v1.8.9
+	github.com/google/btree v1.1.2
+	github.com/hashicorp/golang-lru/v2 v2.0.6
 	github.com/json-iterator/go v1.1.12
 	github.com/pierrec/lz4/v4 v4.1.18
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
@@ -12,7 +16,6 @@ require (
 
 require (
 	github.com/golang/snappy v0.0.1 // indirect
-	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect

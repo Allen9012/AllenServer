@@ -137,3 +137,44 @@ func (m *Module) NotifyEvent(ev event.IEvent) {
 	//TODO implement me
 	panic("implement me")
 }
+
+/*	Module Implement IModuleTimer	*/
+
+func (m *Module) AfterFunc(d time.Duration, cb func(*timer.Timer)) *timer.Timer {
+	if m.mapActiveTimer == nil {
+		m.mapActiveTimer = map[timer.ITimer]struct{}{}
+	}
+
+	return m.dispatcher.AfterFunc(d, nil, cb, m.OnCloseTimer, m.OnAddTimer)
+}
+
+func (m *Module) CronFunc(cronExpr *timer.CronExpr, cb func(*timer.Cron)) *timer.Cron {
+	if m.mapActiveTimer == nil {
+		m.mapActiveTimer = map[timer.ITimer]struct{}{}
+	}
+
+	return m.dispatcher.CronFunc(cronExpr, nil, cb, m.OnCloseTimer, m.OnAddTimer)
+}
+
+func (m *Module) NewTicker(d time.Duration, cb func(*timer.Ticker)) *timer.Ticker {
+	if m.mapActiveTimer == nil {
+		m.mapActiveTimer = map[timer.ITimer]struct{}{}
+	}
+
+	return m.dispatcher.TickerFunc(d, nil, cb, m.OnCloseTimer, m.OnAddTimer)
+}
+
+func (m *Module) OnCloseTimer(t timer.ITimer) {
+	delete(m.mapActiveIdTimer, t.GetId())
+	delete(m.mapActiveTimer, t)
+}
+
+func (m *Module) OnAddTimer(t timer.ITimer) {
+	if t != nil {
+		if m.mapActiveTimer == nil {
+			m.mapActiveTimer = map[timer.ITimer]struct{}{}
+		}
+
+		m.mapActiveTimer[t] = struct{}{}
+	}
+}

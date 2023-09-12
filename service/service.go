@@ -355,3 +355,7 @@ func (rpcEventData *DiscoveryServiceEvent) GetEventType() event.EventType {
 func (rpcEventData *RpcConnEvent) GetEventType() event.EventType {
 	return event.Sys_Event_Node_Event
 }
+
+func (s *Service) RegEventReceiverFunc(eventType event.EventType, receiver event.IEventHandler, callback event.EventCallBack) {
+	s.eventProcessor.RegEventReceiverFunc(eventType, receiver, callback)
+}

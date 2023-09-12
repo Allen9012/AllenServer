@@ -1,8 +1,10 @@
 package simple_service
 
 import (
+	"fmt"
 	"github.com/Allen9012/AllenGame/node"
 	"github.com/Allen9012/AllenGame/service"
+	"github.com/Allen9012/AllenGame/util/timer"
 )
 
 /**
@@ -29,5 +31,16 @@ type TestService2 struct {
 
 // 服务初始化函数，在安装服务时，服务将自动调用OnInit函数
 func (slf *TestService2) OnInit() error {
+	fmt.Printf("TestService2 OnInit.\n")
+
+	//crontab模式定时触发
+	//NewCronExpr的参数分别代表:Seconds Minutes Hours DayOfMonth Month DayOfWeek
+	//以下为每换分钟时触发
+	cron, _ := timer.NewCronExpr("0 * * * * *")
+	slf.CronFunc(cron, slf.OnCron)
 	return nil
+}
+
+func (slf *TestService2) OnCron(cron *timer.Cron) {
+	fmt.Printf(":A minute passed!\n")
 }
