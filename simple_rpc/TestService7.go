@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Allen9012/AllenGame/node"
 	"github.com/Allen9012/AllenGame/service"
+	"github.com/Allen9012/AllenGame/util/timer"
 	"time"
 )
 
@@ -30,7 +31,7 @@ func (slf *TestService7) OnInit() error {
 	return nil
 }
 
-func (slf *TestService7) CallTest() {
+func (slf *TestService7) CallTest(*timer.Timer) {
 	var input InputData
 	input.A = 300
 	input.B = 600
@@ -53,7 +54,7 @@ func (slf *TestService7) CallTest() {
 	}
 }
 
-func (slf *TestService7) AsyncCallTest() {
+func (slf *TestService7) AsyncCallTest(*timer.Timer) {
 	var input InputData
 	input.A = 300
 	input.B = 600
@@ -81,10 +82,9 @@ func (slf *TestService7) AsyncCallTest() {
 	})
 	//rpcCancel()
 	fmt.Println(err, rpcCancel)
-
 }
 
-func (slf *TestService7) GoTest() {
+func (slf *TestService7) GoTest(*timer.Timer) {
 	var input InputData
 	input.A = 300
 	input.B = 600

@@ -2,7 +2,9 @@ package rpc
 
 import (
 	"fmt"
+	"github.com/Allen9012/AllenGame/log"
 	"reflect"
+	"runtime"
 	"strings"
 	"time"
 	"unicode"
@@ -151,13 +153,25 @@ func (handler *RpcHandler) GetRpcHandler() IRpcHandler {
 }
 
 func (handler *RpcHandler) HandlerRpcRequest(request *RpcRequest) {
-	//TODO implement me
-	panic("implement me")
+
 }
 
 func (handler *RpcHandler) HandlerRpcResponseCB(call *Call) {
-	//TODO implement me
-	panic("implement me")
+	defer func() {
+		if r := recover(); r != nil {
+			buf := make([]byte, 4096)
+			l := runtime.Stack(buf, false)
+			errString := fmt.Sprint(r)
+			log.Dump(string(buf[:l]), log.String("error", errString))
+		}
+	}()
+
+	if call.Err == nil {
+		call.callback.Call([]reflect.Value{reflect.ValueOf(call.Reply), nilError})
+	} else {
+		call.callback.Call([]reflect.Value{reflect.ValueOf(call.Reply), reflect.ValueOf(call.Err)})
+	}
+	ReleaseCall(call)
 }
 
 func (handler *RpcHandler) CallMethod(client *Client, ServiceMethod string, param interface{}, callBack reflect.Value, reply interface{}) error {
@@ -166,23 +180,22 @@ func (handler *RpcHandler) CallMethod(client *Client, ServiceMethod string, para
 }
 
 func (handler *RpcHandler) Call(serviceMethod string, args interface{}, reply interface{}) error {
-	//TODO implement me
-	panic("implement me")
+	return handler.callRpc(DefaultRpcTimeout, 0, serviceMethod, args, reply)
 }
 
 func (handler *RpcHandler) CallNode(nodeId int, serviceMethod string, args interface{}, reply interface{}) error {
-	//TODO implement me
-	panic("implement me")
+	return handler.callRpc(DefaultRpcTimeout, nodeId, serviceMethod, args, reply)
 }
 
 func (handler *RpcHandler) AsyncCall(serviceMethod string, args interface{}, callback interface{}) error {
-	//TODO implement me
-	panic("implement me")
+	_, err := handler.asyncCallRpc(DefaultRpcTimeout, 0, serviceMethod, args, callback)
+	return err
 }
 
 func (handler *RpcHandler) AsyncCallNode(nodeId int, serviceMethod string, args interface{}, callback interface{}) error {
-	//TODO implement me
-	panic("implement me")
+	_, err := handler.asyncCallRpc(DefaultRpcTimeout, nodeId, serviceMethod, args, callback)
+
+	return err
 }
 
 func (handler *RpcHandler) CallWithTimeout(timeout time.Duration, serviceMethod string, args interface{}, reply interface{}) error {
@@ -206,13 +219,11 @@ func (handler *RpcHandler) AsyncCallNodeWithTimeout(timeout time.Duration, nodeI
 }
 
 func (handler *RpcHandler) Go(serviceMethod string, args interface{}) error {
-	//TODO implement me
-	panic("implement me")
+	return handler.goRpc(nil, false, 0, serviceMethod, args)
 }
 
 func (handler *RpcHandler) GoNode(nodeId int, serviceMethod string, args interface{}) error {
-	//TODO implement me
-	panic("implement me")
+	return handler.goRpc(nil, false, nodeId, serviceMethod, args)
 }
 
 func (handler *RpcHandler) RawGoNode(rpcProcessorType RpcProcessorType, nodeId int, rpcMethodId uint32, serviceName string, rawArgs []byte) error {
@@ -221,8 +232,7 @@ func (handler *RpcHandler) RawGoNode(rpcProcessorType RpcProcessorType, nodeId i
 }
 
 func (handler *RpcHandler) CastGo(serviceMethod string, args interface{}) error {
-	//TODO implement me
-	panic("implement me")
+	return handler.goRpc(nil, true, 0, serviceMethod, args)
 }
 
 func (handler *RpcHandler) IsSingleCoroutine() bool {
@@ -316,4 +326,19 @@ func (handler *RpcHandler) isExportedOrBuiltinType(t reflect.Type) bool {
 	// PkgPath will be non-empty even for an exported type,
 	// so we need to check the type name as well.
 	return isExported(t.Name()) || t.PkgPath() == ""
+}
+
+func (handler *RpcHandler) callRpc(timeout time.Duration, nodeId int, serviceMethod string, args interface{}, reply interface{}) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (handler *RpcHandler) asyncCallRpc(timeout time.Duration, nodeId int, serviceMethod string, args interface{}, callback interface{}) (CancelRpc, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (handler *RpcHandler) goRpc(processor IRpcProcessor, bCast bool, nodeId int, serviceMethod string, args interface{}) error {
+	//TODO implement me
+	panic("implement me")
 }
