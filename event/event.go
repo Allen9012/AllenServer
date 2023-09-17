@@ -1,6 +1,11 @@
 package event
 
-import "sync"
+import (
+	"fmt"
+	"github.com/Allen9012/AllenGame/log"
+	"runtime"
+	"sync"
+)
 
 /**
   Copyright © 2023 github.com/Allen9012 All rights reserved.
@@ -114,79 +119,150 @@ func NewEventProcessor() IEventProcessor {
 
 /*	=====EventProcessor Implement IEventProcessor=====  */
 
-func (e *EventProcessor) Init(eventChannel IEventChannel) {
-	//TODO implement me
-	panic("implement me")
+func (processor *EventProcessor) Init(eventChannel IEventChannel) {
+	processor.IEventChannel = eventChannel
 }
 
-func (e *EventProcessor) EventHandler(ev IEvent) {
-	//TODO implement me
-	panic("implement me")
+func (processor *EventProcessor) EventHandler(ev IEvent) {
+	// 事件的处理需要recover
+	defer func() {
+		if r := recover(); r != nil {
+			buf := make([]byte, 4096)
+			l := runtime.Stack(buf, false)
+			errString := fmt.Sprint(r)
+			log.Dump(string(buf[:l]), log.String("error", errString))
+		}
+	}()
+	mapCallBack, ok := processor.mapBindHandlerEvent[ev.GetEventType()]
+	if !ok {
+		return
+	}
+	// 执行callback
+	for _, callback := range mapCallBack {
+		callback(ev)
+	}
 }
 
-func (e *EventProcessor) RegEventReceiverFunc(eventType EventType, receiver IEventHandler, callback EventCallBack) {
-	//TODO implement me
-	panic("implement me")
+// 把事件注册到对应的Handler
+func (processor *EventProcessor) RegEventReceiverFunc(eventType EventType, receiver IEventHandler, callback EventCallBack) {
+	//记录receiver自己注册过的事件
+	receiver.addRegInfo(eventType, processor)
+	//记录当前所属IEventProcessor注册的回调
+	receiver.GetEventProcessor().addBindEvent(eventType, receiver, callback)
+	//将注册加入到监听中
+	processor.addListen(eventType, receiver)
 }
 
-func (e *EventProcessor) UnRegEventReceiverFun(eventType EventType, receiver IEventHandler) {
-	//TODO implement me
-	panic("implement me")
+func (processor *EventProcessor) UnRegEventReceiverFun(eventType EventType, receiver IEventHandler) {
+	processor.removeListen(eventType, receiver)
+	receiver.GetEventProcessor().removeBindEvent(eventType, receiver)
+	receiver.removeRegInfo(eventType, processor)
 }
 
-func (e *EventProcessor) castEvent(event IEvent) {
-	//TODO implement me
-	panic("implement me")
+// 事件分发到对应的Service
+func (processor *EventProcessor) castEvent(event IEvent) {
+	if processor.mapListenerEvent == nil {
+		log.Error("mapListenerEvent not init!")
+		return
+	}
+	eventProcessor, ok := processor.mapListenerEvent[event.GetEventType()]
+	if !ok {
+		log.Debug("event is not listen", log.Int("event type", int(event.GetEventType())))
+		return
+	}
+	for proc := range eventProcessor {
+		proc.PushEvent(event)
+	}
 }
 
-func (e *EventProcessor) addBindEvent(eventType EventType, receiver IEventHandler, callback EventCallBack) {
-	//TODO implement me
-	panic("implement me")
+// 增加对应Handler的callback
+func (processor *EventProcessor) addBindEvent(eventType EventType, receiver IEventHandler, callback EventCallBack) {
+	processor.locker.Lock()
+	defer processor.locker.Unlock()
+	if _, ok := processor.mapBindHandlerEvent[eventType]; !ok {
+		// 如果已有就更新
+		processor.mapBindHandlerEvent[eventType] = map[IEventHandler]EventCallBack{}
+	}
+
+	processor.mapBindHandlerEvent[eventType][receiver] = callback
 }
 
-func (e *EventProcessor) addListen(eventType EventType, receiver IEventHandler) {
-	//TODO implement me
-	panic("implement me")
+func (processor *EventProcessor) addListen(eventType EventType, receiver IEventHandler) {
+	processor.locker.Lock()
+	defer processor.locker.Unlock()
+	if _, ok := processor.mapListenerEvent[eventType]; !ok {
+		// 如没有就初始化
+		processor.mapListenerEvent[eventType] = map[IEventProcessor]int{}
+	}
+
+	processor.mapListenerEvent[eventType][receiver.GetEventProcessor()] += 1
 }
 
-func (e *EventProcessor) removeBindEvent(eventType EventType, receiver IEventHandler) {
-	//TODO implement me
-	panic("implement me")
+func (processor *EventProcessor) removeBindEvent(eventType EventType, receiver IEventHandler) {
+	processor.locker.Lock()
+	defer processor.locker.Unlock()
+	if _, ok := processor.mapBindHandlerEvent[eventType]; ok == true {
+		delete(processor.mapBindHandlerEvent[eventType], receiver)
+	}
 }
 
-func (e *EventProcessor) removeListen(eventType EventType, receiver IEventHandler) {
-	//TODO implement me
-	panic("implement me")
+func (processor *EventProcessor) removeListen(eventType EventType, receiver IEventHandler) {
+	processor.locker.Lock()
+	defer processor.locker.Unlock()
+	if _, ok := processor.mapListenerEvent[eventType]; ok == true {
+		processor.mapListenerEvent[eventType][receiver.GetEventProcessor()] -= 1
+		if processor.mapListenerEvent[eventType][receiver.GetEventProcessor()] <= 0 {
+			delete(processor.mapListenerEvent[eventType], receiver.GetEventProcessor())
+		}
+	}
 }
 
 /*	=====EventHandler Implement IEventHandler===== */
 
-func (e *EventHandler) Init(processor IEventProcessor) {
-	//TODO implement me
-	panic("implement me")
+func (handler *EventHandler) Init(processor IEventProcessor) {
+	handler.eventProcessor = processor
+	handler.mapRegEvent = map[EventType]map[IEventProcessor]interface{}{}
 }
 
-func (e *EventHandler) GetEventProcessor() IEventProcessor {
-	//TODO implement me
-	panic("implement me")
+func (handler *EventHandler) GetEventProcessor() IEventProcessor {
+	return handler.eventProcessor
 }
 
-func (e *EventHandler) NotifyEvent(event IEvent) {
-	//TODO implement me
-	panic("implement me")
+func (handler *EventHandler) NotifyEvent(event IEvent) {
+	handler.GetEventProcessor().castEvent(event)
 }
 
-func (e *EventHandler) Destroy() {
-	//TODO implement me
-	panic("implement me")
+// 清除所有mapEventProcess
+func (handler *EventHandler) Destroy() {
+	handler.locker.Lock()
+	defer handler.locker.Unlock()
+	for eventTyp, mapEventProcess := range handler.mapRegEvent {
+		if mapEventProcess == nil {
+			continue
+		}
+
+		for eventProcess := range mapEventProcess {
+			eventProcess.UnRegEventReceiverFun(eventTyp, handler)
+		}
+	}
 }
 
-func (e *EventHandler) addRegInfo(eventType EventType, eventProcessor IEventProcessor) {
-	//TODO implement me
-	panic("implement me")
+func (handler *EventHandler) addRegInfo(eventType EventType, eventProcessor IEventProcessor) {
+	handler.locker.Lock()
+	defer handler.locker.Unlock()
+	// 如果还没有，先初始化
+	if handler.mapRegEvent == nil {
+		handler.mapRegEvent = map[EventType]map[IEventProcessor]interface{}{}
+	}
+	if _, ok := handler.mapRegEvent[eventType]; !ok {
+		handler.mapRegEvent[eventType] = map[IEventProcessor]interface{}{}
+	}
+	handler.mapRegEvent[eventType][eventProcessor] = nil
 }
 
-func (e *EventHandler) removeRegInfo(eventType EventType, eventProcessor IEventProcessor) {
-	//TODO implement me
-	panic("implement me")
+// 删除eventProcessor 的信息
+func (handler *EventHandler) removeRegInfo(eventType EventType, eventProcessor IEventProcessor) {
+	if _, ok := handler.mapRegEvent[eventType]; ok == true {
+		delete(handler.mapRegEvent[eventType], eventProcessor)
+	}
 }
