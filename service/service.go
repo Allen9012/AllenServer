@@ -9,6 +9,7 @@ import (
 	"github.com/Allen9012/AllenGame/profiler"
 	"github.com/Allen9012/AllenGame/rpc"
 	"github.com/Allen9012/AllenGame/util/timer"
+	"reflect"
 	"runtime"
 	"strconv"
 	"sync"
@@ -111,6 +112,7 @@ func (s *Service) Stop() {
 	log.Info(s.GetName() + " service has been stopped")
 }
 
+// 启动指定大小的线程
 func (s *Service) Start() {
 	s.startStatus = true
 	var waitRun sync.WaitGroup
@@ -221,45 +223,38 @@ func (s *Service) Run() {
 }
 
 /*	=====Implement IService=====	 */
-
+// 注册服务的名字
 func (s *Service) OnSetup(iService IService) {
-	//TODO implement me
-	panic("implement me")
+	if iService.GetName() == "" {
+		// 拿到接口的实际值，赋予这个struct的名字（强制有一个名字）
+		s.name = reflect.Indirect(reflect.ValueOf(iService)).Type().Name()
+	}
 }
 
 func (s *Service) OnInit() error {
-	//TODO implement me
-	panic("implement me")
+	return nil
 }
 
 func (s *Service) OnStart() {
-	//TODO implement me
-	panic("implement me")
 }
 
 func (s *Service) OnRelease() {
-	//TODO implement me
-	panic("implement me")
 }
 
 func (s *Service) SetName(serviceName string) {
-	//TODO implement me
-	panic("implement me")
+	s.name = serviceName
 }
 
 func (s *Service) GetName() string {
-	//TODO implement me
-	panic("implement me")
+	return s.name
 }
 
 func (s *Service) GetServiceCfg() interface{} {
-	//TODO implement me
-	panic("implement me")
+	return s.serviceCfg
 }
 
 func (s *Service) GetProfiler() *profiler.Profiler {
-	//TODO implement me
-	panic("implement me")
+	return s.profiler
 }
 
 func (s *Service) GetServiceEventChannelNum() int {
@@ -268,15 +263,19 @@ func (s *Service) GetServiceEventChannelNum() int {
 }
 
 func (s *Service) GetServiceTimerChannelNum() int {
-	//TODO implement me
-	panic("implement me")
+	return len(s.chanEvent)
 }
 
+// 设置事件channel的缓冲大小
 func (s *Service) SetEventChannelNum(num int) {
-	//TODO implement me
-	panic("implement me")
+	if s.chanEvent == nil {
+		s.chanEvent = make(chan event.IEvent, num)
+	} else {
+		panic("this stage cannot be set")
+	}
 }
 
+// 打开当前服务的性能检测
 func (s *Service) OpenProfiler() {
 	s.profiler = profiler.RegProfiler(s.GetName())
 	if s.profiler == nil {
@@ -294,11 +293,13 @@ func (s *Service) Release() {
 			log.Dump(string(buf[:l]), log.String("error", errString))
 		}
 	}()
-
+	// 执行onRelease方法
 	s.self.OnRelease()
 }
 
 /*	Service Implement IRpcHandlerChannel */
+
+// RPC请求事件
 func (s *Service) PushRpcRequest(rpcRequest *rpc.RpcRequest) error {
 	ev := event.NewEvent()
 	ev.Type = event.ServiceRpcRequestEvent
@@ -307,6 +308,7 @@ func (s *Service) PushRpcRequest(rpcRequest *rpc.RpcRequest) error {
 	return s.pushEvent(ev)
 }
 
+// RPC响应事件
 func (s *Service) PushRpcResponse(call *rpc.Call) error {
 	ev := event.NewEvent()
 	ev.Type = event.ServiceRpcResponseEvent

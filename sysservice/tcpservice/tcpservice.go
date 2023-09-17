@@ -57,12 +57,14 @@ func (tcpService *TcpService) genId() uint64 {
 	if node.GetNodeId() > MaxNodeId {
 		panic("nodeId exceeds the maximum!")
 	}
-
+	// 对一个常量执行原子操作递增生成id，限制最大值
 	newSeed := atomic.AddUint32(&seed, 1) % MaxSeed
 	nowTime := uint64(time.Now().Unix()) % MaxTime
+	// 组合一个UUID
 	return (uint64(node.GetNodeId()) << 50) | (nowTime << 19) | uint64(newSeed)
 }
 
+// nodeID限制长度14
 func GetNodeId(agentId uint64) int {
 	return int(agentId >> 50)
 }
