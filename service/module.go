@@ -1,10 +1,14 @@
 package service
 
 import (
+	"fmt"
 	"github.com/Allen9012/AllenGame/concurrent"
 	"github.com/Allen9012/AllenGame/event"
+	"github.com/Allen9012/AllenGame/log"
 	rpcHandle "github.com/Allen9012/AllenGame/rpc"
 	"github.com/Allen9012/AllenGame/util/timer"
+	"reflect"
+	"sync/atomic"
 	"time"
 )
 
@@ -65,48 +69,111 @@ type Module struct {
 }
 
 func (m *Module) SetModuleId(moduleId uint32) bool {
-	//TODO implement me
-	panic("implement me")
+	if m.moduleId > 0 {
+		return false
+	}
+
+	m.moduleId = moduleId
+	return true
 }
 
 func (m *Module) GetModuleId() uint32 {
-	//TODO implement me
-	panic("implement me")
+	return m.moduleId
 }
 
+// module加入service
 func (m *Module) AddModule(module IModule) (uint32, error) {
-	//TODO implement me
-	panic("implement me")
+	//没有事件处理器不允许加入其他模块
+	if m.GetEventProcessor() == nil {
+		return 0, fmt.Errorf("module %+v Event Processor is nil", m.self)
+	}
+
+	pAddModule := module.getBaseModule().(*Module)
+	if pAddModule.GetModuleId() == 0 {
+		pAddModule.moduleId = m.NewModuleId()
+	}
+
+	if m.child == nil {
+		m.child = map[uint32]IModule{}
+	}
+	_, ok := m.child[module.GetModuleId()]
+	if ok == true {
+		return 0, fmt.Errorf("exists module id %d", module.GetModuleId())
+	}
+	pAddModule.IRpcHandler = m.IRpcHandler
+	pAddModule.self = module
+	pAddModule.parent = m.self
+	pAddModule.dispatcher = m.GetAncestor().getBaseModule().(*Module).dispatcher
+	pAddModule.ancestor = m.ancestor
+	pAddModule.moduleName = reflect.Indirect(reflect.ValueOf(module)).Type().Name()
+	pAddModule.eventHandler = event.NewEventHandler()
+	pAddModule.eventHandler.Init(m.eventHandler.GetEventProcessor())
+	pAddModule.IConcurrent = m.IConcurrent
+	err := module.OnInit()
+	if err != nil {
+		return 0, err
+	}
+
+	m.child[module.GetModuleId()] = module
+	m.ancestor.getBaseModule().(*Module).descendants[module.GetModuleId()] = module
+
+	log.Debug("Add module " + module.GetModuleName() + " completed")
+	return module.GetModuleId(), nil
 }
 
 func (m *Module) GetModule(moduleId uint32) IModule {
-	//TODO implement me
-	panic("implement me")
+	return m
 }
 
 func (m *Module) GetAncestor() IModule {
-	//TODO implement me
-	panic("implement me")
+	return m.ancestor
 }
 
 func (m *Module) ReleaseModule(moduleId uint32) {
-	//TODO implement me
-	panic("implement me")
+	pModule := m.GetModule(moduleId).getBaseModule().(*Module)
+
+	//释放子孙
+	for id := range pModule.child {
+		m.ReleaseModule(id)
+	}
+
+	pModule.self.OnRelease()
+	pModule.GetEventHandler().Destroy()
+	log.Debug("Release module " + pModule.GetModuleName())
+	for pTimer := range pModule.mapActiveTimer {
+		pTimer.Cancel()
+	}
+
+	for _, t := range pModule.mapActiveIdTimer {
+		t.Cancel()
+	}
+
+	delete(m.child, moduleId)
+	delete(m.ancestor.getBaseModule().(*Module).descendants, moduleId)
+
+	//清理被删除的Module
+	pModule.self = nil
+	pModule.parent = nil
+	pModule.child = nil
+	pModule.mapActiveTimer = nil
+	pModule.dispatcher = nil
+	pModule.ancestor = nil
+	pModule.descendants = nil
+	pModule.IRpcHandler = nil
+	pModule.mapActiveIdTimer = nil
 }
 
 func (m *Module) NewModuleId() uint32 {
-	//TODO implement me
-	panic("implement me")
+	m.ancestor.getBaseModule().(*Module).seedModuleId += 1
+	return m.ancestor.getBaseModule().(*Module).seedModuleId
 }
 
 func (m *Module) GetParent() IModule {
-	//TODO implement me
-	panic("implement me")
+	return m.parent
 }
 
 func (m *Module) OnInit() error {
-	//TODO implement me
-	panic("implement me")
+	return nil
 }
 
 // OnRelease 释放和关闭service需要释放Module
@@ -114,28 +181,23 @@ func (m *Module) OnRelease() {
 }
 
 func (m *Module) getBaseModule() IModule {
-	//TODO implement me
-	panic("implement me")
+	return m
 }
 
 func (m *Module) GetService() IService {
-	//TODO implement me
-	panic("implement me")
+	return m.GetAncestor().(IService)
 }
 
 func (m *Module) GetModuleName() string {
-	//TODO implement me
-	panic("implement me")
+	return m.moduleName
 }
 
 func (m *Module) GetEventProcessor() event.IEventProcessor {
-	//TODO implement me
-	panic("implement me")
+	return m.eventHandler.GetEventProcessor()
 }
 
 func (m *Module) NotifyEvent(ev event.IEvent) {
-	//TODO implement me
-	panic("implement me")
+	m.eventHandler.NotifyEvent(ev)
 }
 
 /*	Module Implement IModuleTimer	*/
@@ -164,11 +226,13 @@ func (m *Module) NewTicker(d time.Duration, cb func(*timer.Ticker)) *timer.Ticke
 	return m.dispatcher.TickerFunc(d, nil, cb, m.OnCloseTimer, m.OnAddTimer)
 }
 
+// OnCloseTimer 删除倒计时
 func (m *Module) OnCloseTimer(t timer.ITimer) {
 	delete(m.mapActiveIdTimer, t.GetId())
 	delete(m.mapActiveTimer, t)
 }
 
+// OnAddTimer 注册Timer
 func (m *Module) OnAddTimer(t timer.ITimer) {
 	if t != nil {
 		if m.mapActiveTimer == nil {
@@ -176,5 +240,88 @@ func (m *Module) OnAddTimer(t timer.ITimer) {
 		}
 
 		m.mapActiveTimer[t] = struct{}{}
+	}
+}
+
+func (m *Module) GetEventHandler() event.IEventHandler {
+	return m.eventHandler
+}
+
+func (m *Module) cb(*timer.Timer) {
+
+}
+
+func (m *Module) SafeAfterFunc(timerId *uint64, d time.Duration, AdditionData interface{}, cb func(uint64, interface{})) {
+	if m.mapActiveIdTimer == nil {
+		m.mapActiveIdTimer = map[uint64]timer.ITimer{}
+	}
+
+	if *timerId != 0 {
+		m.CancelTimerId(timerId)
+	}
+
+	*timerId = m.GenTimerId()
+	t := m.dispatcher.AfterFunc(d, cb, nil, m.OnCloseTimer, m.OnAddTimer)
+	t.AdditionData = AdditionData
+	t.Id = *timerId
+	m.mapActiveIdTimer[*timerId] = t
+}
+
+func (m *Module) SafeCronFunc(cronId *uint64, cronExpr *timer.CronExpr, AdditionData interface{}, cb func(uint64, interface{})) {
+	if m.mapActiveIdTimer == nil {
+		m.mapActiveIdTimer = map[uint64]timer.ITimer{}
+	}
+
+	*cronId = m.GenTimerId()
+	c := m.dispatcher.CronFunc(cronExpr, cb, nil, m.OnCloseTimer, m.OnAddTimer)
+	c.AdditionData = AdditionData
+	c.Id = *cronId
+	m.mapActiveIdTimer[*cronId] = c
+}
+
+func (m *Module) SafeNewTicker(tickerId *uint64, d time.Duration, AdditionData interface{}, cb func(uint64, interface{})) {
+	if m.mapActiveIdTimer == nil {
+		m.mapActiveIdTimer = map[uint64]timer.ITimer{}
+	}
+
+	*tickerId = m.GenTimerId()
+	t := m.dispatcher.TickerFunc(d, cb, nil, m.OnCloseTimer, m.OnAddTimer)
+	t.AdditionData = AdditionData
+	t.Id = *tickerId
+	m.mapActiveIdTimer[*tickerId] = t
+}
+
+func (m *Module) CancelTimerId(timerId *uint64) bool {
+	if timerId == nil || *timerId == 0 {
+		log.Warning("timerId is invalid")
+		return false
+	}
+
+	if m.mapActiveIdTimer == nil {
+		log.Error("mapActiveIdTimer is nil")
+		return false
+	}
+
+	t, ok := m.mapActiveIdTimer[*timerId]
+	if ok == false {
+		log.Stack("cannot find timer id ", log.Uint64("timerId", *timerId))
+		return false
+	}
+
+	t.Cancel()
+	*timerId = 0
+	return true
+}
+
+var timerSeedId uint32
+
+func (m *Module) GenTimerId() uint64 {
+	for {
+		newTimerId := (uint64(m.GetModuleId()) << 32) | uint64(atomic.AddUint32(&timerSeedId, 1))
+		if _, ok := m.mapActiveIdTimer[newTimerId]; ok == true {
+			continue
+		}
+
+		return newTimerId
 	}
 }

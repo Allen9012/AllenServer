@@ -375,3 +375,7 @@ func writeProcessPid(nodeId int) {
 		}
 	}
 }
+
+func GetService(serviceName string) service.IService {
+	return service.GetService(serviceName)
+}

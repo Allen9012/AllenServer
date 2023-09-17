@@ -1,6 +1,7 @@
 package simple_rpc
 
 import (
+	"fmt"
 	"github.com/Allen9012/AllenGame/node"
 	"github.com/Allen9012/AllenGame/service"
 )
@@ -21,17 +22,21 @@ type TestService6 struct {
 	service.Service
 }
 
+//----------------------------------------------------------------------------------------------
+
+type InputData struct {
+	A, B int
+}
+
+// ----------------------------------------------------------------------------------------------
 func (slf *TestService6) OnInit() error {
+	fmt.Printf("【RPC服务】启动\n")
 	return nil
 }
 
-type InputData struct {
-	A int
-	B int
-}
-
 // 注意RPC函数名的格式必需为RPC_FunctionName或者是RPCFunctionName，如下的RPC_Sum也可以写成RPCSum
-func (slf *TestService6) RPC_Sum(input *InputData, output *int) error {
+func (slf *TestService6) RPCSum(input *InputData, output *int) error {
+	fmt.Printf("ServiceRPC-RPCSum\n")
 	*output = input.A + input.B
 	return nil
 }
