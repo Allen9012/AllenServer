@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"errors"
 	"fmt"
 	"github.com/Allen9012/AllenGame/log"
 	"github.com/Allen9012/AllenGame/network"
@@ -103,7 +104,7 @@ func (agent *RpcAgent) Run() {
 			//will close tcpconn
 			break
 		}
-
+		// 判断是否压缩
 		bCompress := (data[0] >> 7) > 0
 		processor := GetProcessor(data[0] & 0x7f)
 		if processor == nil {
@@ -115,6 +116,7 @@ func (agent *RpcAgent) Run() {
 		//解析head
 		var compressBuff []byte
 		byteData := data[1:]
+		// 解压缩
 		if bCompress == true {
 			var unCompressErr error
 
@@ -128,10 +130,12 @@ func (agent *RpcAgent) Run() {
 		}
 
 		req := MakeRpcRequest(processor, 0, 0, "", false, nil)
+		// 反序列化
 		err = processor.Unmarshal(byteData, req.RpcRequestData)
 		if cap(compressBuff) > 0 {
 			compressor.UnCompressBufferCollection(compressBuff)
 		}
+		// 消费掉这条消息，释放内存
 		agent.conn.ReleaseReadMsg(data)
 		if err != nil {
 			log.Error("Unmarshal failed", log.String("RemoteAddr", agent.conn.RemoteAddr().String()), log.ErrorAttr("error", err))
@@ -170,7 +174,7 @@ func (agent *RpcAgent) Run() {
 			ReleaseRpcRequest(req)
 			continue
 		}
-
+		// 判断是否需要reply
 		if req.RpcRequestData.IsNoReply() == false {
 			req.requestHandle = func(Returns interface{}, Err RpcError) {
 				agent.WriteResponse(processor, req.RpcRequestData.GetServiceMethod(), req.RpcRequestData.GetSeq(), Returns, Err)
@@ -281,12 +285,163 @@ func (server *Server) myselfRpcHandlerGo(client *Client, handlerName string, ser
 	return rpcHandler.CallMethod(client, serviceMethod, args, callBack, reply)
 }
 
-func (server *Server) selfNodeRpcHandlerGo(timeout time.Duration, processor IRpcProcessor, client *Client, b bool, name string, id uint32, name2 string, t interface{}, t2 interface{}, args []byte) *Call {
-	//TODO implement me
-	panic("implement me")
+func (server *Server) selfNodeRpcHandlerGo(timeout time.Duration, processor IRpcProcessor, client *Client, noReply bool, handlerName string, rpcMethodId uint32, serviceMethod string, args interface{}, reply interface{}, rawArgs []byte) *Call {
+	pCall := MakeCall()
+	pCall.Seq = client.generateSeq()
+	pCall.TimeOut = timeout
+	pCall.ServiceMethod = serviceMethod
+
+	rpcHandler := server.rpcHandleFinder.FindRpcHandler(handlerName)
+	if rpcHandler == nil {
+		err := errors.New("service method " + serviceMethod + " not config!")
+		log.Error("service method not config", log.String("serviceMethod", serviceMethod), log.ErrorAttr("error", err))
+		pCall.Seq = 0
+		pCall.DoError(err)
+
+		return pCall
+	}
+
+	var iParam interface{}
+	if processor == nil {
+		_, processor = GetProcessorType(args)
+	}
+
+	if args != nil {
+		var err error
+		iParam, err = processor.Clone(args)
+		if err != nil {
+			sErr := errors.New("RpcHandler " + handlerName + "." + serviceMethod + " deep copy inParam is error:" + err.Error())
+			log.Error("deep copy inParam is failed", log.String("handlerName", handlerName), log.String("serviceMethod", serviceMethod))
+			pCall.Seq = 0
+			pCall.DoError(sErr)
+
+			return pCall
+		}
+	}
+
+	req := MakeRpcRequest(processor, 0, rpcMethodId, serviceMethod, noReply, nil)
+	req.inParam = iParam
+	req.localReply = reply
+	if rawArgs != nil {
+		var err error
+		req.inParam, err = rpcHandler.UnmarshalInParam(processor, serviceMethod, rpcMethodId, rawArgs)
+		if err != nil {
+			log.Error("unmarshalInParam is failed", log.String("serviceMethod", serviceMethod), log.Uint32("rpcMethodId", rpcMethodId), log.ErrorAttr("error", err))
+			pCall.Seq = 0
+			pCall.DoError(err)
+			ReleaseRpcRequest(req)
+			return pCall
+		}
+	}
+
+	if noReply == false {
+		client.AddPending(pCall)
+		callSeq := pCall.Seq
+		req.requestHandle = func(Returns interface{}, Err RpcError) {
+			if reply != nil && Returns != reply && Returns != nil {
+				byteReturns, err := req.rpcProcessor.Marshal(Returns)
+				if err != nil {
+					Err = ConvertError(err)
+					log.Error("returns data cannot be marshal", log.Uint64("seq", callSeq), log.ErrorAttr("error", err))
+				} else {
+					err = req.rpcProcessor.Unmarshal(byteReturns, reply)
+					if err != nil {
+						Err = ConvertError(err)
+						log.Error("returns data cannot be Unmarshal", log.Uint64("seq", callSeq), log.ErrorAttr("error", err))
+					}
+				}
+			}
+
+			ReleaseRpcRequest(req)
+			v := client.RemovePending(callSeq)
+			if v == nil {
+				log.Error("rpcClient cannot find seq", log.Uint64("seq", callSeq))
+				return
+			}
+
+			if len(Err) == 0 {
+				v.Err = nil
+				v.DoOK()
+			} else {
+				log.Error(Err.Error())
+				v.DoError(Err)
+			}
+		}
+	}
+
+	err := rpcHandler.PushRpcRequest(req)
+	if err != nil {
+		log.Error(err.Error())
+		pCall.DoError(err)
+		ReleaseRpcRequest(req)
+	}
+
+	return pCall
 }
 
-func (server *Server) selfNodeRpcHandlerAsyncGo(timeout time.Duration, client *Client, handler IRpcHandler, b bool, name string, method string, args interface{}, reply interface{}, callback reflect.Value, cancelable bool) (CancelRpc, error) {
-	//TODO implement me
-	panic("implement me")
+func (server *Server) selfNodeRpcHandlerAsyncGo(timeout time.Duration, client *Client, callerRpcHandler IRpcHandler, noReply bool, handlerName string, serviceMethod string, args interface{}, reply interface{}, callback reflect.Value, cancelable bool) (CancelRpc, error) {
+	rpcHandler := server.rpcHandleFinder.FindRpcHandler(handlerName)
+	if rpcHandler == nil {
+		err := errors.New("service method " + serviceMethod + " not config!")
+		log.Error(err.Error())
+		return emptyCancelRpc, err
+	}
+
+	_, processor := GetProcessorType(args)
+	iParam, err := processor.Clone(args)
+	if err != nil {
+		errM := errors.New("RpcHandler " + handlerName + "." + serviceMethod + " deep copy inParam is error:" + err.Error())
+		log.Error(errM.Error())
+		return emptyCancelRpc, errM
+	}
+
+	req := MakeRpcRequest(processor, 0, 0, serviceMethod, noReply, nil)
+	req.inParam = iParam
+	req.localReply = reply
+
+	cancelRpc := emptyCancelRpc
+	var callSeq uint64
+	if noReply == false {
+		callSeq = client.generateSeq()
+		pCall := MakeCall()
+		pCall.Seq = callSeq
+		pCall.rpcHandler = callerRpcHandler
+		pCall.callback = &callback
+		pCall.Reply = reply
+		pCall.ServiceMethod = serviceMethod
+		pCall.TimeOut = timeout
+		client.AddPending(pCall)
+		rpcCancel := RpcCancel{CallSeq: callSeq, Cli: client}
+		cancelRpc = rpcCancel.CancelRpc
+
+		req.requestHandle = func(Returns interface{}, Err RpcError) {
+			v := client.RemovePending(callSeq)
+			if v == nil {
+				ReleaseRpcRequest(req)
+				return
+			}
+			if len(Err) == 0 {
+				v.Err = nil
+			} else {
+				v.Err = Err
+			}
+
+			if Returns != nil {
+				v.Reply = Returns
+			}
+			v.rpcHandler.PushRpcResponse(v)
+			ReleaseRpcRequest(req)
+		}
+	}
+
+	err = rpcHandler.PushRpcRequest(req)
+	if err != nil {
+		ReleaseRpcRequest(req)
+		if callSeq > 0 {
+			client.RemovePending(callSeq)
+		}
+		return emptyCancelRpc, err
+	}
+
+	return cancelRpc, nil
 }

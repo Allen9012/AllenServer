@@ -104,18 +104,51 @@ func (slf *Profiler) Push(tag string) *Analyzer {
 }
 
 func (slf *Profiler) check(pElem *Element) (*Record, time.Duration) {
-	//TODO implement me
-	panic("implement me")
+	if pElem == nil {
+		return nil, 0
+	}
+
+	subTm := time.Now().Sub(pElem.pushTime)
+	if subTm < slf.overTime {
+		return nil, subTm
+	}
+
+	record := Record{
+		RType:      OvertimeType,
+		CostTime:   subTm,
+		RecordName: pElem.tagName,
+	}
+
+	if subTm > slf.maxOverTime {
+		record.RType = MaxOvertimeType
+	}
+
+	return &record, subTm
 }
 
 func (slf *Analyzer) Pop() {
-	//TODO implement me
-	panic("implement me")
+	slf.profiler.stackLocker.Lock()
+	defer slf.profiler.stackLocker.Unlock()
+
+	pElement := slf.elem.Value.(*Element)
+	pElem, subTm := slf.profiler.check(pElement)
+	slf.profiler.callNum += 1
+	slf.profiler.totalCostTime += subTm
+	if pElem != nil {
+		slf.profiler.pushRecordLog(pElem)
+	}
+	slf.profiler.stack.Remove(slf.elem)
 }
 
 func (slf *Profiler) pushRecordLog(record *Record) {
-	//TODO implement me
-	panic("implement me")
+	if slf.record.Len() >= DefaultMaxRecordNum {
+		front := slf.stack.Front()
+		if front != nil {
+			slf.stack.Remove(front)
+		}
+	}
+
+	slf.record.PushBack(record)
 }
 
 func SetReportFunction(reportFun ReportFunType) {
