@@ -7,10 +7,9 @@ import (
 	"fmt"
 	"github.com/Allen9012/AllenGame/log"
 	"github.com/Allen9012/AllenGame/service"
+	"github.com/gomodule/redigo/redis"
 	"strconv"
 	"time"
-
-	"github.com/gomodule/redigo/redis"
 )
 
 type RetError struct {
@@ -38,6 +37,7 @@ func (slf *RetMapString) Get() (error, map[string]bool) {
 type RedisModule struct {
 	service.Module
 	redisPool *redis.Pool
+	//client    *go_redis.Client
 }
 
 // ConfigRedis 服务器配置
@@ -86,6 +86,22 @@ func (m *RedisModule) Init(redisCfg *ConfigRedis) {
 		},
 	}
 }
+
+//// 使用go-redis的方案
+//func (m *RedisModule) NewRedisClient(redisCfg *ConfigRedis) {
+//	redisServer := fmt.Sprintf("%s:%d", redisCfg.IP, redisCfg.Port)
+//	ctx := context.Background()
+//	client := go_redis.NewClient(&go_redis.Options{
+//		Addr:     redisServer,
+//		Password: "",
+//		DB:       0, // use default DB
+//	})
+//	_, err := client.Ping(ctx).Result()
+//	if err != nil {
+//		panic(err)
+//	}
+//	m.client = client
+//}
 
 func (m *RedisModule) getConn() (redis.Conn, error) {
 	if m.redisPool == nil {

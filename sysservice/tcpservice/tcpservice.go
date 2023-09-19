@@ -47,6 +47,7 @@ type TcpPack struct {
 	Data     interface{}
 }
 
+/*	Implement Agent */
 type Client struct {
 	id         uint64
 	tcpConn    *network.TCPConn
@@ -167,6 +168,8 @@ func (slf *Client) GetId() uint64 {
 	return slf.id
 }
 
+/*	Implement Agent */
+
 func (slf *Client) Run() {
 	defer func() {
 		if r := recover(); r != nil {
@@ -176,7 +179,7 @@ func (slf *Client) Run() {
 			log.Dump(string(buf[:l]), log.String("error", errString))
 		}
 	}()
-
+	// 建立连接事件
 	slf.tcpService.NotifyEvent(&event.Event{Type: event.Sys_Event_Tcp, Data: TcpPack{ClientId: slf.id, Type: TPT_Connected}})
 	for {
 		if slf.tcpConn == nil {
@@ -199,10 +202,12 @@ func (slf *Client) Run() {
 	}
 }
 
+// 断开连接
 func (slf *Client) OnClose() {
 	slf.tcpService.NotifyEvent(&event.Event{Type: event.Sys_Event_Tcp, Data: TcpPack{ClientId: slf.id, Type: TPT_DisConnected}})
 	slf.tcpService.mapClientLocker.Lock()
 	defer slf.tcpService.mapClientLocker.Unlock()
+	// 删除本机客户端信息
 	delete(slf.tcpService.mapClient, slf.GetId())
 }
 
@@ -238,10 +243,10 @@ func (tcpService *TcpService) Close(clientId uint64) {
 	return
 }
 
-func (tcpService *TcpService) GetClientIp(clientid uint64) string {
+func (tcpService *TcpService) GetClientIp(clientId uint64) string {
 	tcpService.mapClientLocker.Lock()
 	defer tcpService.mapClientLocker.Unlock()
-	pClient, ok := tcpService.mapClient[clientid]
+	pClient, ok := tcpService.mapClient[clientId]
 	if ok == false {
 		return ""
 	}

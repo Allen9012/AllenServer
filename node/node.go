@@ -379,3 +379,11 @@ func writeProcessPid(nodeId int) {
 func GetService(serviceName string) service.IService {
 	return service.GetService(serviceName)
 }
+
+func Start() {
+	err := console.Run(os.Args)
+	if err != nil {
+		fmt.Printf("%+v\n", err)
+		return
+	}
+}

@@ -24,7 +24,7 @@ func (discovery *ConfigDiscovery) InitDiscovery(localNodeId int, funDelNode FunD
 	if err != nil {
 		return err
 	}
-
+	// 跳过当前节点的服务执行安装
 	for _, nodeInfo := range nodeInfoList {
 		if nodeInfo.NodeId == localNodeId {
 			continue

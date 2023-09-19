@@ -54,18 +54,6 @@ func (slf *PBPackInfo) GetMsg() proto.Message {
 }
 
 // must goroutine safe
-func (pbProcessor *PBProcessor) MsgRoute(clientId uint64, msg interface{}) error {
-	pPackInfo := msg.(*PBPackInfo)
-	v, ok := pbProcessor.mapMsg[pPackInfo.typ]
-	if ok == false {
-		return fmt.Errorf("Cannot find msgtype %d is register!", pPackInfo.typ)
-	}
-
-	v.msgHandler(clientId, pPackInfo.msg)
-	return nil
-}
-
-// must goroutine safe
 func (pbProcessor *PBProcessor) Unmarshal(clientId uint64, data []byte) (interface{}, error) {
 	defer pbProcessor.ReleaseBytes(data)
 	return pbProcessor.UnmarshalWithOutRelease(clientId, data)
@@ -148,6 +136,18 @@ func (pbProcessor *PBProcessor) DisConnectedRoute(clientId uint64) {
 
 func (pbProcessor *PBProcessor) RegisterUnknownMsg(unknownMessageHandler UnknownMessageHandler) {
 	pbProcessor.unknownMessageHandler = unknownMessageHandler
+}
+
+// must goroutine safe
+func (pbProcessor *PBProcessor) MsgRoute(clientId uint64, msg interface{}) error {
+	pPackInfo := msg.(*PBPackInfo)
+	v, ok := pbProcessor.mapMsg[pPackInfo.typ]
+	if ok == false {
+		return fmt.Errorf("Cannot find msgtype %d is register!", pPackInfo.typ)
+	}
+
+	v.msgHandler(clientId, pPackInfo.msg)
+	return nil
 }
 
 func (pbProcessor *PBProcessor) RegisterConnected(connectHandler ConnectHandler) {
